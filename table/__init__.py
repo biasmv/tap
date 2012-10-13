@@ -5,6 +5,7 @@ import itertools
 import operator
 import cPickle
 from stutil import Median, Max, Min, Mean
+import coerce
 
 def MakeTitle(col_name):
   return col_name.replace('_', ' ')
@@ -296,32 +297,6 @@ class Table(object):
     self.AddCol(new_name, self.col_types[self.GetColIndex(old_name)],
                 self[old_name])
     self.RemoveCol(old_name)
-  def _Coerce(self, value, ty):
-    '''
-    Try to convert values (e.g. from :class:`str` type) to the specified type
-
-    :param value: the value
-    :type value: any type
-
-    :param ty: name of type to convert it to (i.e. *int*, *float*, *string*,
-               *bool*)
-    :type ty: :class:`str`
-    '''
-    if value=='NA' or value==None:
-      return None
-    if ty=='int':
-      return int(value)
-    if ty=='float':
-      return float(value)
-    if ty=='string':
-      return str(value)
-    if ty=='bool':
-      if isinstance(value, str) or isinstance(value, unicode):
-        if value.upper() in ('FALSE', 'NO',):
-          return False
-        return True
-      return bool(value)
-    raise ValueError('Unknown type %s' % ty)
 
   def GetColIndex(self, col):
     '''
@@ -500,7 +475,7 @@ Statistics for column %(col)s
     for i,data in enumerate(zip(*d.values())):
       new_row = [None for a in range(len(self.col_names))]
       for idx,v in zip(idxs,data):
-        new_row[idx] = self._Coerce(v, self.col_types[idx])
+        new_row[idx] = coerce.coerce(v, self.col_types[idx])
         
       # partially overwrite existing row with new data
       if overwrite:
@@ -624,7 +599,7 @@ Statistics for column %(col)s
       if len(data)!=len(self.col_names):
         msg='data array must have %d elements, not %d'
         raise ValueError(msg % (len(self.col_names), len(data)))
-      new_row = [self._Coerce(v, t) for v, t in zip(data, self.col_types)]
+      new_row = [coerce.coerce(v, t) for v, t in zip(data, self.col_types)]
       
       # fully overwrite existing row with new data
       if overwrite:
@@ -819,7 +794,7 @@ Statistics for column %(col)s
       self.col_types[col_idx]=GuessColumnType(self[self.col_names[col_idx]])
     for row in self.rows:
       for idx in range(len(row)):
-        row[idx]=self._Coerce(row[idx], self.col_types[idx])
+        row[idx]=coerce.coerce(row[idx], self.col_types[idx])
         
   @staticmethod
   def _LoadCSV(stream_or_filename, sep):

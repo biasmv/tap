@@ -633,10 +633,7 @@ class TestTable(unittest.TestCase):
     # wrong columns types in init
     self.assertRaises(ValueError, Table, ['bla','bli'], 'ab')
     
-    # wrong column types in Coerce
     tab = Table()
-    self.assertRaises(ValueError, tab._Coerce, 'bla', 'a')
-
     # wrong column types in AddCol
     self.assertRaises(ValueError, tab.AddCol, 'bla', 'a')
     
@@ -730,49 +727,6 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError, Table, ['x'], 'foo')
     self.assertRaises(ValueError, Table, ['x'], ['a'])
     self.assertRaises(ValueError, Table, ['x'], ['foo'])
-    
-  def testCoerce(self):
-    tab = Table()
-    
-    # None values
-    self.assertEquals(tab._Coerce('NA', 'x'), None)
-    self.assertEquals(tab._Coerce(None, 'x'), None)
-    
-    # int type
-    self.assertTrue(isinstance(tab._Coerce(2 ,'int'), int))
-    self.assertEquals(tab._Coerce(2 ,'int'), 2)
-    self.assertTrue(isinstance(tab._Coerce(2.2 ,'int'), int))
-    self.assertEquals(tab._Coerce(2.2 ,'int'), 2)
-    self.assertEquals(tab._Coerce(True ,'int'), 1)
-    self.assertEquals(tab._Coerce(False ,'int'), 0)
-    self.assertRaises(ValueError, tab._Coerce, "foo" , 'int')
-    
-    # float type
-    self.assertTrue(isinstance(tab._Coerce(2 ,'float'), float))
-    self.assertEquals(tab._Coerce(2 ,'float'), 2.000)
-    self.assertTrue(isinstance(tab._Coerce(3.141 ,'float'), float))
-    self.assertEquals(tab._Coerce(3.141 ,'float'), 3.141)
-    self.assertRaises(ValueError, tab._Coerce, "foo" , 'float')
-    
-    # string type
-    self.assertTrue(isinstance(tab._Coerce('foo' ,'string'), str))
-    self.assertTrue(isinstance(tab._Coerce('this is a longer string' ,'string'), str))
-    self.assertTrue(isinstance(tab._Coerce(2.2 ,'string'), str))
-    self.assertTrue(isinstance(tab._Coerce(2 ,'string'), str))
-    self.assertTrue(isinstance(tab._Coerce(True ,'string'), str))
-    self.assertTrue(isinstance(tab._Coerce(False ,'string'), str))
-    
-    # bool type
-    self.assertEquals(tab._Coerce(True ,'bool'), True)
-    self.assertEquals(tab._Coerce(False ,'bool'), False)
-    self.assertEquals(tab._Coerce('falSE' ,'bool'), False)
-    self.assertEquals(tab._Coerce('no' ,'bool'), False)
-    self.assertEquals(tab._Coerce('not false and not no','bool'), True)
-    self.assertEquals(tab._Coerce(0, 'bool'), False)
-    self.assertEquals(tab._Coerce(1, 'bool'), True)
-    
-    # unknown type
-    self.assertRaises(ValueError, tab._Coerce, 'bla', 'abc')
     
   def testRemoveCol(self):
     tab = self.CreateTestTable()
@@ -1413,7 +1367,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(TypeError, tab.GetNumpyMatrix, 'first')
     self.assertRaises(RuntimeError, tab.GetNumpyMatrix)
     
-  def testOptimalPrefactors(self):
+  def test_can_calculate_optimal_prefactors(self):
     if not HAS_NUMPY:
       return
     tab = Table(['a','b','c','d','e','f'],
@@ -1448,7 +1402,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(RuntimeError, tab.GetOptimalPrefactors, 'c','a','b',weight='d')
     self.assertRaises(RuntimeError, tab.GetOptimalPrefactors, 'c',weights='d')
 
-  def testGaussianSmooth(self):
+  def test_can_smooth_columns_with_gaussians(self):
     tab = Table(['a','b','c','d','e','f'],'fffffi',
                 a=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
                 b=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
@@ -1493,7 +1447,7 @@ class TestTable(unittest.TestCase):
       self.assertAlmostEquals(tab_list[5][i],ref_list[5][i])
      
 
-  def testIsEmpty(self):
+  def test_table_is_empty(self):
     tab = Table()
     self.assertTrue(tab.IsEmpty())
     self.assertTrue(tab.IsEmpty(ignore_nan=False))

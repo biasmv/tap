@@ -1,6 +1,6 @@
 import math
 
-def Mean(xs):
+def mean(xs):
   """
   Calculate mean of dataset
   """
@@ -8,7 +8,7 @@ def Mean(xs):
     raise RuntimeError("Can't calculate mean of empty sequence")
   return float(sum(xs))/len(xs)
 
-def Median(xs):
+def median(xs):
   """
   Calculate median of dataset
   """
@@ -20,7 +20,7 @@ def Median(xs):
   else:
     return sorted_xs[(len(xs)-1)/2]
 
-def StdDev(xs):
+def std_dev(xs):
   """
   Calculate standard-deviation of dataset
   
@@ -28,16 +28,10 @@ def StdDev(xs):
   sigma=sqrt|---------------|
             |       n       |
   """
-  mean=Mean(xs)
-  return math.sqrt(sum([(x-mean)**2 for x in xs])/len(xs))
+  mean_val=mean(xs)
+  return math.sqrt(sum([(x-mean_val)**2 for x in xs])/len(xs))
 
-def Min(xs):
-  return min(xs)
-
-def Max(xs):
-  return max(xs)
-
-def Correl(xs, ys):
+def correl(xs, ys):
   """
   Calculates the correlation coefficient between xs and ys as
   
@@ -52,8 +46,8 @@ def Correl(xs, ys):
     raise RuntimeError("Can't calculate correl. Sequence lengths do not match.")
   if len(xs)==1:
     raise RuntimeError("Can't calculate correl of sequences with length 1.")
-  mean_x=Mean(xs)
-  mean_y=Mean(ys)
+  mean_x=mean(xs)
+  mean_y=mean(ys)
   sigma_x, sigma_y=(0.0, 0.0)
   cross_term=0.0
   for x, y in zip(xs, ys):

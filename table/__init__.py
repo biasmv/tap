@@ -4,13 +4,13 @@ import math
 import itertools
 import operator
 import cPickle
-from stutil import Median, Max, Min, Mean
+from stutil import median, mean, std_dev
 import coerce
 
-def MakeTitle(col_name):
+def make_title(col_name):
   return col_name.replace('_', ' ')
 
-def IsStringLike(value):
+def is_string_like(value):
   if isinstance(value, TableCol) or isinstance(value, BinaryColExpr):
     return False
   try:
@@ -19,12 +19,12 @@ def IsStringLike(value):
   except:
     return False
 
-def IsNullString(value):
+def is_null_string(value):
   value=value.strip().upper()
   return value in ('', 'NULL', 'NONE', 'NA')
 
-def IsScalar(value):
-  if IsStringLike(value):
+def is_scalar(value):
+  if is_string_like(value):
     return True
   try:
     if isinstance(value, TableCol) or isinstance(value, BinaryColExpr):
@@ -34,12 +34,12 @@ def IsScalar(value):
   except:
     return True
 
-def GuessColumnType(iterator):
+def guess_col_type(iterator):
   empty=True
   possibilities=set(['bool', 'int', 'float'])
   for ele in iterator:
     str_ele=str(ele).upper()
-    if IsNullString(str_ele):
+    if is_null_string(str_ele):
       continue
     empty=False
     if 'int' in possibilities:
@@ -71,9 +71,9 @@ class BinaryColExpr:
     self.op=op
     self.lhs=lhs
     self.rhs=rhs
-    if IsScalar(lhs):
+    if is_scalar(lhs):
       self.lhs=itertools.cyle([self.lhs])
-    if IsScalar(rhs):
+    if is_scalar(rhs):
       self.rhs=itertools.cycle([self.rhs])
   def __iter__(self):
     for l, r in zip(self.lhs, self.rhs):
@@ -97,7 +97,7 @@ class TableCol:
   def __init__(self, table, col):
     self._table=table
     if type(col)==str:
-      self.col_index=self._table.GetColIndex(col)
+      self.col_index=self._table.col_index(col)
     else:
       self.col_index=col
 
@@ -183,7 +183,7 @@ class Table(object):
     self.comment=''
     self.name=''
     
-    self.col_types = self._ParseColTypes(col_types)
+    self.col_types = self._parse_col_types(col_types)
     self.rows=[]    
     if len(kwargs)>=0:
       if not col_names:
@@ -191,7 +191,7 @@ class Table(object):
       if not self.col_types:
         self.col_types=['string' for u in range(len(self.col_names))]
       if len(kwargs)>0:
-        self._AddRowsFromDict(kwargs)
+        self._add_rows_from_dict(kwargs)
 
   def __getattr__(self, col_name):
     # pickling doesn't call the standard __init__ defined above and thus
@@ -203,7 +203,7 @@ class Table(object):
     return TableCol(self, col_name)
 
   @staticmethod
-  def _ParseColTypes(types, exp_num=None):
+  def _parse_col_types(types, exp_num=None):
     if types==None:
       return None
     
@@ -214,7 +214,7 @@ class Table(object):
     type_list = []
     
     # string type
-    if IsScalar(types):
+    if is_scalar(types):
       if type(types)==str:
         types = types.lower()
         
@@ -270,7 +270,7 @@ class Table(object):
       
     return type_list
 
-  def SetName(self, name):
+  def set_name(self, name):
     '''
     Set name of the table
     :param name: name
@@ -284,7 +284,7 @@ class Table(object):
     '''
     return self.name
 
-  def RenameCol(self, old_name, new_name):
+  def rename_col(self, old_name, new_name):
     """
     Rename column *old_name* to *new_name*.
 
@@ -294,11 +294,11 @@ class Table(object):
     """
     if old_name==new_name:
       return
-    self.AddCol(new_name, self.col_types[self.GetColIndex(old_name)],
+    self.add_col(new_name, self.col_types[self.col_index(old_name)],
                 self[old_name])
-    self.RemoveCol(old_name)
+    self.remove_col(old_name)
 
-  def GetColIndex(self, col):
+  def col_index(self, col):
     '''
     Returns the column index for the column with the given name.
 
@@ -308,13 +308,13 @@ class Table(object):
       raise ValueError('Table has no column named "%s"' % col)
     return self.col_names.index(col)
   
-  def GetColNames(self):
+  def get_col_names(self):
     '''
     Returns a list containing all column names.
     '''
     return self.col_names
   
-  def SearchColNames(self, regex):
+  def search_col_names(self, regex):
     '''
     Returns a list of column names matching the regex
 
@@ -330,7 +330,7 @@ class Table(object):
         matching_names.append(name)
     return matching_names
 
-  def HasCol(self, col):
+  def has_col(self, col):
     '''
     Checks if the column with a given name is present in the table.
     '''
@@ -345,13 +345,13 @@ class Table(object):
   def __setitem__(self, k, value):
     col_index=k
     if type(k)!=int:
-      col_index=self.GetColIndex(k)
-    if IsScalar(value):
+      col_index=self.col_index(k)
+    if is_scalar(value):
       value=itertools.cycle([value])
     for r, v in zip(self.rows, value):
       r[col_index]=v
 
-  def ToString(self, float_format='%.3f', int_format='%d', rows=None):
+  def to_string(self, float_format='%.3f', int_format='%d', rows=None):
     '''
     Convert the table into a string representation.
 
@@ -409,34 +409,34 @@ class Table(object):
     return s
 
   def __str__(self):
-    return self.ToString()
+    return self.to_string()
   
-  def Stats(self, col):
-     idx  = self.GetColIndex(col)
+  def stats(self, col):
+     idx  = self.col_index(col)
      text ='''
 Statistics for column %(col)s
 
   Number of Rows         : %(num)d
   Number of Rows Not None: %(num_non_null)d 
-  Mean                   : %(mean)f
-  Median                 : %(median)f
+  mean                   : %(mean)f
+  median                 : %(median)f
   Standard Deviation     : %(stddev)f
-  Min                    : %(min)f
-  Max                    : %(max)f
+  min                    : %(min)f
+  max                    : %(max)f
 '''
      data = {
        'col' : col,
        'num' : len(self.rows),
-       'num_non_null' : self.Count(col),
-       'median' : self.Median(col),
-       'mean' : self.Mean(col),
-       'stddev' : self.StdDev(col),
-       'min' : self.Min(col),
-       'max' : self.Max(col),
+       'num_non_null' : self.count(col),
+       'median' : self.median(col),
+       'mean' : self.mean(col),
+       'stddev' : self.std_dev(col),
+       'min' : self.min(col),
+       'max' : self.max(col),
      }
      return text % data
 
-  def _AddRowsFromDict(self, d, overwrite=None):
+  def _add_rows_from_dict(self, d, overwrite=None):
     '''
     Add one or more rows from a :class:`dictionary <dict>`.
     
@@ -457,12 +457,12 @@ Statistics for column %(col)s
              data items is different for different columns.
     '''
     # get column indices
-    idxs = [self.GetColIndex(k) for k in d.keys()]
+    idxs = [self.col_index(k) for k in d.keys()]
     
     # convert scalar values to list
     old_len = None
     for k,v in d.iteritems():
-      if IsScalar(v):
+      if is_scalar(v):
         v = [v]
         d[k] = v
       if not old_len:
@@ -479,7 +479,7 @@ Statistics for column %(col)s
         
       # partially overwrite existing row with new data
       if overwrite:
-        overwrite_idx = self.GetColIndex(overwrite)
+        overwrite_idx = self.col_index(overwrite)
         added = False
         for i,r in enumerate(self.rows):
           if r[overwrite_idx]==new_row[overwrite_idx]:
@@ -494,7 +494,7 @@ Statistics for column %(col)s
       if not overwrite or not added:
         self.rows.append(new_row)
       
-  def PairedTTest(self, col_a, col_b):
+  def paired_t_test(self, col_a, col_b):
     """
     Two-sided test for the null-hypothesis that two related samples 
     have the same average (expected values)
@@ -509,14 +509,14 @@ Statistics for column %(col)s
     from scipy.stats import ttest_rel
     xs = []
     ys = []
-    for x, y in self.Zip(col_a, col_b):
+    for x, y in self.zip(col_a, col_b):
       if x!=None and y!=None:
         xs.append(x)
         ys.append(y)
     result = ttest_rel(xs, ys)
     return result[1]
 
-  def AddRow(self, data, overwrite=None):
+  def add_row(self, data, overwrite=None):
     """
     Add a row to the table.
     
@@ -562,7 +562,7 @@ Statistics for column %(col)s
 
       # add rows from dict
       data = {'x': [1.2, 1.6], 'z': [1.6, 5.3]}
-      tab.AddRow(data)
+      tab.add_row(data)
       print tab
 
       '''
@@ -578,7 +578,7 @@ Statistics for column %(col)s
 
       # overwrite the row with x=1.2 and add row with x=1.9
       data = {'x': [1.2, 1.9], 'z': [7.9, 3.5]}
-      tab.AddRow(data, overwrite='x')
+      tab.add_row(data, overwrite='x')
       print tab
 
       '''
@@ -594,7 +594,7 @@ Statistics for column %(col)s
       '''
     """
     if type(data)==dict:
-      self._AddRowsFromDict(data, overwrite)
+      self._add_rows_from_dict(data, overwrite)
     else:
       if len(data)!=len(self.col_names):
         msg='data array must have %d elements, not %d'
@@ -603,7 +603,7 @@ Statistics for column %(col)s
       
       # fully overwrite existing row with new data
       if overwrite:
-        overwrite_idx = self.GetColIndex(overwrite)
+        overwrite_idx = self.col_index(overwrite)
         added = False
         for i,r in enumerate(self.rows):
           if r[overwrite_idx]==new_row[overwrite_idx]:
@@ -615,20 +615,20 @@ Statistics for column %(col)s
       if not overwrite or not added:
         self.rows.append(new_row)
 
-  def RemoveCol(self, col):
+  def remove_col(self, col):
     """
     Remove column with the given name from the table
 
     :param col: name of column to remove
     :type col: :class:`str`
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     del self.col_names[idx]
     del self.col_types[idx]
     for row in self.rows:
       del row[idx]
 
-  def AddCol(self, col_name, col_type, data=None):
+  def add_col(self, col_name, col_type, data=None):
     """
     Add a column to the right of the table.
     
@@ -647,7 +647,7 @@ Statistics for column %(col)s
     .. code-block:: python
     
       tab=Table(['x'], 'f', x=range(5))
-      tab.AddCol('even', 'bool', itertools.cycle([True, False]))
+      tab.add_col('even', 'bool', itertools.cycle([True, False]))
       print tab
     
       '''
@@ -670,7 +670,7 @@ Statistics for column %(col)s
     .. code-block:: python
 
       tab=Table(['x'], 'f', x=range(5))
-      tab.AddCol('num', 'i', 1)
+      tab.add_col('num', 'i', 1)
       print tab
 
       '''
@@ -694,12 +694,12 @@ Statistics for column %(col)s
     if col_name in self.col_names:
       raise ValueError('Column with name %s already exists'%col_name)
 
-    col_type = self._ParseColTypes(col_type, exp_num=1)[0]
+    col_type = self._parse_col_types(col_type, exp_num=1)[0]
     self.col_names.append(col_name)
     self.col_types.append(col_type)
 
     if len(self.rows)>0:
-      if IsScalar(data):
+      if is_scalar(data):
         for row in self.rows:
           row.append(data)
       else:
@@ -712,27 +712,27 @@ Statistics for column %(col)s
           row.append(d)
 
     elif data!=None and len(self.col_names)==1:
-      if IsScalar(data):
-        self.AddRow({col_name : data})
+      if is_scalar(data):
+        self.add_row({col_name : data})
       else:
         for v in data:
-          self.AddRow({col_name : v})
+          self.add_row({col_name : v})
 
-  def Filter(self, *args, **kwargs):
+  def filter(self, *args, **kwargs):
     """
     Returns a filtered table only containing rows matching all the predicates 
     in kwargs and args For example,
     
     .. code-block:: python
     
-      tab.Filter(town='Basel')
+      tab.filter(town='Basel')
     
     will return all the rows where the value of the column "town" is equal to 
     "Basel". Several predicates may be combined, i.e.
     
     .. code-block:: python
     
-      tab.Filter(town='Basel', male=True)
+      tab.filter(town='Basel', male=True)
       
     will return the rows with "town" equal to "Basel" and "male" equal to true.
     args are unary callables returning true if the row should be included in the
@@ -746,15 +746,15 @@ Statistics for column %(col)s
           matches=False
           break
       for key, val in kwargs.iteritems():
-        if row[self.GetColIndex(key)]!=val:
+        if row[self.col_index(key)]!=val:
           matches=False
           break
       if matches:
-        filt_tab.AddRow(row)
+        filt_tab.add_row(row)
     return filt_tab
 
   @staticmethod
-  def _LoadOST(stream_or_filename):
+  def _load_ost(stream_or_filename):
     fieldname_pattern=re.compile(r'(?P<name>[^[]+)(\[(?P<type>\w+)\])?')
     values_pattern=re.compile("([^\" ]+|\"[^\"]*\")+")
     if not hasattr(stream_or_filename, 'read'):
@@ -784,20 +784,20 @@ Statistics for column %(col)s
         tab=Table(fieldnames, fieldtypes)
         header=True
         continue
-      tab.AddRow([x.strip('"') for x in values_pattern.findall(line)])
+      tab.add_row([x.strip('"') for x in values_pattern.findall(line)])
     if num_lines==0:
       raise IOError("Cannot read table from empty stream")
     return tab
 
-  def _GuessColumnTypes(self):
+  def _guess_col_types(self):
     for col_idx in range(len(self.col_names)):
-      self.col_types[col_idx]=GuessColumnType(self[self.col_names[col_idx]])
+      self.col_types[col_idx]=guess_col_type(self[self.col_names[col_idx]])
     for row in self.rows:
       for idx in range(len(row)):
         row[idx]=coerce.coerce(row[idx], self.col_types[idx])
         
   @staticmethod
-  def _LoadCSV(stream_or_filename, sep):
+  def _load_csv(stream_or_filename, sep):
     if not hasattr(stream_or_filename, 'read'):
       stream=open(stream_or_filename, 'r')
     else:
@@ -811,15 +811,15 @@ Statistics for column %(col)s
         tab=Table(header, types)
         first=False
       else:
-        tab.AddRow(row)
+        tab.add_row(row)
     if first:
       raise IOError('trying to load table from empty CSV stream/file')
 
-    tab._GuessColumnTypes()
+    tab._guess_col_types()
     return tab
 
   @staticmethod
-  def _LoadPickle(stream_or_filename):
+  def _load_pickle(stream_or_filename):
     if not hasattr(stream_or_filename, 'read'):
       stream=open(stream_or_filename, 'rb')
     else:
@@ -827,7 +827,7 @@ Statistics for column %(col)s
     return cPickle.load(stream)
 
   @staticmethod
-  def _GuessFormat(filename):
+  def _guess_format(filename):
     try:
       filename = filename.name
     except AttributeError, e:
@@ -841,9 +841,9 @@ Statistics for column %(col)s
     
     
   @staticmethod
-  def Load(stream_or_filename, format='auto', sep=','):
+  def load(stream_or_filename, format='auto', sep=','):
     """
-    Load table from stream or file with given name.
+    load table from stream or file with given name.
 
     By default, the file format is set to *auto*, which tries to guess the file
     format from the file extension. The following file extensions are
@@ -895,17 +895,17 @@ Statistics for column %(col)s
     """
     format=format.lower()
     if format=='auto':
-      format = Table._GuessFormat(stream_or_filename)
+      format = Table._guess_format(stream_or_filename)
       
     if format=='ost':
-      return Table._LoadOST(stream_or_filename)
+      return Table._load_ost(stream_or_filename)
     if format=='csv':
-      return Table._LoadCSV(stream_or_filename, sep=sep)
+      return Table._load_csv(stream_or_filename, sep=sep)
     if format=='pickle':
-      return Table._LoadPickle(stream_or_filename)
+      return Table._load_pickle(stream_or_filename)
     raise ValueError('unknown format ""' % format)
 
-  def Sort(self, by, order='+'):
+  def sort(self, by, order='+'):
     """
     Performs an in-place sort of the table, based on column *by*.
 
@@ -918,12 +918,12 @@ Statistics for column %(col)s
     sign=-1
     if order=='-':
       sign=1
-    key_index=self.GetColIndex(by)
+    key_index=self.col_index(by)
     def _key_cmp(lhs, rhs):
       return sign*cmp(lhs[key_index], rhs[key_index])
     self.rows=sorted(self.rows, _key_cmp)
     
-  def GetUnique(self, col, ignore_nan=True):
+  def get_unique(self, col, ignore_nan=True):
     """
     Extract a list of all unique values from one column
 
@@ -933,7 +933,7 @@ Statistics for column %(col)s
     :param ignore_nan: ignore all *None* values
     :type ignore_nan: :class:`bool`
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     seen = {}
     result = []
     for row in self.rows:
@@ -944,21 +944,21 @@ Statistics for column %(col)s
         result.append(item)
     return result
     
-  def Zip(self, *args):
+  def zip(self, *args):
     """
     Allows to conveniently iterate over a selection of columns, e.g.
     
     .. code-block:: python
     
-      tab=Table.Load('...')
-      for col1, col2 in tab.Zip('col1', 'col2'):
+      tab=Table.load('...')
+      for col1, col2 in tab.zip('col1', 'col2'):
         print col1, col2
     
     is a shortcut for
     
     .. code-block:: python
     
-      tab=Table.Load('...')
+      tab=Table.load('...')
       for col1, col2 in zip(tab['col1'], tab['col2']):
         print col1, col2
     """
@@ -1079,7 +1079,7 @@ Statistics for column %(col)s
       import matplotlib.pyplot as plt
       import matplotlib.mlab as mlab
       import numpy as np
-      idx1 = self.GetColIndex(x)
+      idx1 = self.col_index(x)
       xs = []
       ys = []
       zs = []
@@ -1090,13 +1090,13 @@ Statistics for column %(col)s
       if x_title!=None:
         nice_x=x_title
       else:
-        nice_x=MakeTitle(x)
+        nice_x=make_title(x)
       
       if y_title!=None:
         nice_y=y_title
       else:
         if y:
-          nice_y=MakeTitle(y)
+          nice_y=make_title(y)
         else:
           nice_y=None
       
@@ -1104,15 +1104,15 @@ Statistics for column %(col)s
         nice_z = z_title
       else:
         if z:
-          nice_z = MakeTitle(z)
+          nice_z = make_title(z)
         else:
           nice_z = None
 
-      if x_range and (IsScalar(x_range) or len(x_range)!=2):
+      if x_range and (is_scalar(x_range) or len(x_range)!=2):
         raise ValueError('parameter x_range must contain exactly two elements')
-      if y_range and (IsScalar(y_range) or len(y_range)!=2):
+      if y_range and (is_scalar(y_range) or len(y_range)!=2):
         raise ValueError('parameter y_range must contain exactly two elements')
-      if z_range and (IsScalar(z_range) or len(z_range)!=2):
+      if z_range and (is_scalar(z_range) or len(z_range)!=2):
         raise ValueError('parameter z_range must contain exactly two elements')
 
       if color:
@@ -1120,8 +1120,8 @@ Statistics for column %(col)s
       if legend:
         kwargs['label']=legend
       if y and z:
-        idx3 = self.GetColIndex(z)
-        idx2 = self.GetColIndex(y)
+        idx3 = self.col_index(z)
+        idx2 = self.col_index(y)
         for row in self.rows:
           if row[idx1]!=None and row[idx2]!=None and row[idx3]!=None:
             if plot_if and not plot_if(self, row):
@@ -1134,8 +1134,8 @@ Statistics for column %(col)s
           z_spacing = (z_range[1] - z_range[0]) / num_z_levels
           l = z_range[0]
         else:
-          l = self.Min(z)
-          z_spacing = (self.Max(z) - l) / num_z_levels
+          l = self.min(z)
+          z_spacing = (self.max(z) - l) / num_z_levels
         
         for i in range(0,num_z_levels+1):
           levels.append(l)
@@ -1152,7 +1152,7 @@ Statistics for column %(col)s
         plt.colorbar(ticks=levels)
             
       elif y:
-        idx2=self.GetColIndex(y)
+        idx2=self.col_index(y)
         for row in self.rows:
           if row[idx1]!=None and row[idx2]!=None:
             if plot_if and not plot_if(self, row):
@@ -1165,7 +1165,7 @@ Statistics for column %(col)s
         label_vals=[]
         
         if labels:
-          label_idx=self.GetColIndex(labels)
+          label_idx=self.col_index(labels)
         for row in self.rows:
           if row[idx1]!=None:
             if plot_if and not plot_if(self, row):
@@ -1220,7 +1220,7 @@ Statistics for column %(col)s
       print "Function needs numpy and matplotlib, but I could not import it."
       raise
     
-  def PlotHistogram(self, col, x_range=None, num_bins=10, normed=False,
+  def plot_histogram(self, col, x_range=None, num_bins=10, normed=False,
                     histtype='stepfilled', align='mid', x_title=None,
                     y_title=None, title=None, clear=True, save=False,
                     color=None, y_range=None):
@@ -1280,7 +1280,7 @@ Statistics for column %(col)s
       tab=Table(['a'],'f', a=[math.cos(x*0.01) for x in range(100)])
 
       # one dimensional plot of column 'd' vs. index
-      plt=tab.PlotHistogram('a')
+      plt=tab.plot_histogram('a')
       plt.show()
 
     """
@@ -1293,7 +1293,7 @@ Statistics for column %(col)s
       kwargs={}
       if color:
         kwargs['color']=color
-      idx = self.GetColIndex(col)
+      idx = self.col_index(col)
       data = []
       for r in self.rows:
         if r[idx]!=None:
@@ -1309,7 +1309,7 @@ Statistics for column %(col)s
       if x_title!=None:
         nice_x=x_title
       else:
-        nice_x=MakeTitle(col)
+        nice_x=make_title(col)
       plt.xlabel(nice_x, size='x-large')
       if y_range:
         plt.ylim(y_range) 
@@ -1332,10 +1332,10 @@ Statistics for column %(col)s
       print "Function needs numpy and matplotlib, but I could not import it."
       raise
  
-  def _Max(self, col):
+  def _max(self, col):
     if len(self.rows)==0:
       return None, None
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type=='int' or col_type=='float':
       max_val = -float('inf')
@@ -1350,7 +1350,7 @@ Statistics for column %(col)s
         max_idx = i
     return max_val, max_idx
 
-  def PlotBar(self, cols, x_labels=None, x_labels_rotation='horizontal', y_title=None, title=None, 
+  def plot_bar(self, cols, x_labels=None, x_labels_rotation='horizontal', y_title=None, title=None, 
               colors=None, yerr_cols=None, width=0.8, bottom=0, 
               legend=True, save=False):
 
@@ -1402,7 +1402,7 @@ Statistics for column %(col)s
       import numpy as np
       import matplotlib.pyplot as plt
     except:
-      raise ImportError('PlotBar relies on numpy and matplotlib, but I could not import it!')
+      raise ImportError('plot_bar relies on numpy and matplotlib, but I could not import it!')
     
     if len(cols)>7:
       raise ValueError('More than seven bars at one position looks rather meaningless...')
@@ -1421,7 +1421,7 @@ Statistics for column %(col)s
         raise RuntimeError ('Number of cols and number of error columns must be consistent!')
       
     for c in cols:
-      cid=self.GetColIndex(c)
+      cid=self.col_index(c)
       temp=list()
       for r in self.rows:
         temp.append(r[cid])
@@ -1429,7 +1429,7 @@ Statistics for column %(col)s
       
     if yerr_cols:
       for c in yerr_cols:
-        cid=self.GetColIndex(c)
+        cid=self.col_index(c)
         temp=list()
         for r in self.rows:
           temp.append(r[cid])
@@ -1484,7 +1484,7 @@ Statistics for column %(col)s
     
     return plt
       
-  def PlotHexbin(self, x, y, title=None, x_title=None, y_title=None, x_range=None, y_range=None, binning='log',
+  def plot_hexbin(self, x, y, title=None, x_title=None, y_title=None, x_range=None, y_range=None, binning='log',
                  colormap='jet', show_scalebar=False, scalebar_label=None, clear=True, save=False, show=False):
 
     """
@@ -1545,10 +1545,10 @@ Statistics for column %(col)s
       import matplotlib.pyplot as plt
       import matplotlib.cm as cm
     except:
-      raise ImportError('PlotHexbin relies on matplotlib, but I could not import it')
+      raise ImportError('plot_hexbin relies on matplotlib, but I could not import it')
 
-    idx=self.GetColIndex(x)
-    idy=self.GetColIndex(y)
+    idx=self.col_index(x)
+    idy=self.col_index(y)
     xdata=[]
     ydata=[]
 
@@ -1563,22 +1563,22 @@ Statistics for column %(col)s
     if x_title!=None:
       nice_x=x_title
     else:
-      nice_x=MakeTitle(x)
+      nice_x=make_title(x)
       
     if y_title!=None:
       nice_y=y_title
     else:
-      nice_y=MakeTitle(y)
+      nice_y=make_title(y)
 
     if title==None:
       title = '%s vs. %s' % (nice_x, nice_y)
   
-    if IsStringLike(colormap):
+    if is_string_like(colormap):
       colormap=getattr(cm, colormap)
 
-    if x_range and (IsScalar(x_range) or len(x_range)!=2):
+    if x_range and (is_scalar(x_range) or len(x_range)!=2):
       raise ValueError('parameter x_range must contain exactly two elements')
-    if y_range and (IsScalar(y_range) or len(y_range)!=2):
+    if y_range and (is_scalar(y_range) or len(y_range)!=2):
       raise ValueError('parameter y_range must contain exactly two elements')
     if x_range:
       plt.xlim((x_range[0], x_range[1]))
@@ -1608,7 +1608,7 @@ Statistics for column %(col)s
 
     return plt
         
-  def MaxRow(self, col):
+  def max_row(self, col):
     """
     Returns the row containing the cell with the maximal value in col. If 
     several rows have the highest value, only the first one is returned.
@@ -1619,11 +1619,11 @@ Statistics for column %(col)s
 
     :returns: row with maximal col value or None if the table is empty
     """
-    val, idx = self._Max(col)
+    val, idx = self._max(col)
     if idx!=None:
       return self.rows[idx]
   
-  def Max(self, col):
+  def max(self, col):
     """
     Returns the maximum value in col. If several rows have the highest value,
     only the first one is returned. None values are ignored.
@@ -1631,10 +1631,10 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._Max(col)
+    val, idx = self._max(col)
     return val
   
-  def MaxIdx(self, col):
+  def max_idx(self, col):
     """
     Returns the row index of the cell with the maximal value in col. If
     several rows have the highest value, only the first one is returned.
@@ -1643,13 +1643,13 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._Max(col)
+    val, idx = self._max(col)
     return idx
   
-  def _Min(self, col):
+  def _min(self, col):
     if len(self.rows)==0:
       return None, None
-    idx=self.GetColIndex(col)
+    idx=self.col_index(col)
     col_type = self.col_types[idx]
     if col_type=='int' or col_type=='float':
       min_val=float('inf')
@@ -1664,7 +1664,7 @@ Statistics for column %(col)s
         min_idx=i
     return min_val, min_idx
 
-  def Min(self, col):
+  def min(self, col):
     """
     Returns the minimal value in col. If several rows have the lowest value,
     only the first one is returned. None values are ignored.
@@ -1672,10 +1672,10 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._Min(col)
+    val, idx = self._min(col)
     return val
   
-  def MinRow(self, col):
+  def min_row(self, col):
     """
     Returns the row containing the cell with the minimal value in col. If 
     several rows have the lowest value, only the first one is returned.
@@ -1686,11 +1686,11 @@ Statistics for column %(col)s
 
     :returns: row with minimal col value or None if the table is empty
     """
-    val, idx = self._Min(col)
+    val, idx = self._min(col)
     if idx!=None:
       return self.rows[idx]
   
-  def MinIdx(self, col):
+  def min_idx(self, col):
     """
     Returns the row index of the cell with the minimal value in col. If
     several rows have the lowest value, only the first one is returned.
@@ -1699,10 +1699,10 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._Min(col)
+    val, idx = self._min(col)
     return idx
   
-  def Sum(self, col):
+  def sum(self, col):
     """
     Returns the sum of the given column. Cells with None are ignored. Returns 
     0.0, if the column doesn't contain any elements. Col must be of numeric
@@ -1713,17 +1713,17 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("Sum can only be used on numeric column types")
+      raise TypeError("sum can only be used on numeric column types")
     s = 0.0
     for r in self.rows:
       if r[idx]!=None:
         s += r[idx] 
     return s 
 
-  def Mean(self, col):
+  def mean(self, col):
     """
     Returns the mean of the given column. Cells with None are ignored. Returns 
     None, if the column doesn't contain any elements. Col must be of numeric
@@ -1737,21 +1737,21 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("Mean can only be used on numeric or bool column types")
+      raise TypeError("mean can only be used on numeric or bool column types")
     
     vals=[]
     for v in self[col]:
       if v!=None:
         vals.append(v)
     try:
-      return stutil.Mean(vals)
+      return stutil.mean(vals)
     except:
       return None
     
-  def RowMean(self, mean_col_name, cols):
+  def row_mean(self, mean_col_name, cols):
     """
     Adds a new column of type 'float' with a specified name (*mean_col_name*),
     containing the mean of all specified columns for each row.
@@ -1785,7 +1785,7 @@ Statistics for column %(col)s
     
     .. code-block::python
     
-      tab.RowMean('mean', ['x', 'u'])
+      tab.row_mean('mean', ['x', 'u'])
     
     
     ==== ==== ==== ===== 
@@ -1798,15 +1798,15 @@ Statistics for column %(col)s
       
     """
     
-    if IsScalar(cols):
+    if is_scalar(cols):
       cols = [cols]
     
     cols_idxs = []
     for col in cols:
-      idx = self.GetColIndex(col)
+      idx = self.col_index(col)
       col_type = self.col_types[idx]
       if col_type!='int' and col_type!='float' and col_type!='bool':
-        raise TypeError("RowMean can only be used on numeric column types")
+        raise TypeError("row_mean can only be used on numeric column types")
       cols_idxs.append(idx)
       
     mean_rows = []
@@ -1817,14 +1817,14 @@ Statistics for column %(col)s
         if v!=None:
           vals.append(v)
       try:
-        mean = stutil.Mean(vals)
+        mean = stutil.mean(vals)
         mean_rows.append(mean)
       except:
         mean_rows.append(None)
     
-    self.AddCol(mean_col_name, 'f', mean_rows)
+    self.add_col(mean_col_name, 'f', mean_rows)
     
-  def Percentiles(self, col, nths):
+  def percentiles(self, col, nths):
     """
     returns the percentiles of column *col* given in *nths*.
 
@@ -1841,10 +1841,10 @@ Statistics for column %(col)s
     :raises: :class:`TypeError` if column type is ``string``
     :returns: List of percentils in the same order as given in *nths*
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("Median can only be used on numeric column types")
+      raise TypeError("median can only be used on numeric column types")
     
     for nth in nths:
       if nth < 0 or nth > 100:
@@ -1863,7 +1863,7 @@ Statistics for column %(col)s
       percentiles.append(p)
     return percentiles
 
-  def Median(self, col):
+  def median(self, col):
     """
     Returns the median of the given column. Cells with None are ignored. Returns 
     None, if the column doesn't contain any elements. Col must be of numeric
@@ -1874,22 +1874,22 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("Median can only be used on numeric column types")
+      raise TypeError("median can only be used on numeric column types")
     
     vals=[]
     for v in self[col]:
       if v!=None:
         vals.append(v)
-    stutil.Median(vals)
+    stutil.median(vals)
     try:
-      return stutil.Median(vals)
+      return stutil.median(vals)
     except:
       return None
     
-  def StdDev(self, col):
+  def std_dev(self, col):
     """
     Returns the standard deviation of the given column. Cells with None are
     ignored. Returns None, if the column doesn't contain any elements. Col must
@@ -1900,23 +1900,24 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("StdDev can only be used on numeric column types")
+      raise TypeError("std_dev can only be used on numeric column types")
     
     vals=[]
     for v in self[col]:
       if v!=None:
         vals.append(v)
     try:
-      return stutil.StdDev(vals)
-    except:
+      return std_dev(vals)
+    except Exception, e:
+      print e
       return None
 
-  def Count(self, col, ignore_nan=True):
+  def count(self, col, ignore_nan=True):
     """
-    Count the number of cells in column that are not equal to None.
+    count the number of cells in column that are not equal to None.
 
     :param col: column name
     :type col: :class:`str`
@@ -1925,7 +1926,7 @@ Statistics for column %(col)s
     :type ignore_nan: :class:`bool`
     """
     count=0
-    idx=self.GetColIndex(col)
+    idx=self.col_index(col)
     for r in self.rows:
       if ignore_nan:
         if r[idx]!=None:
@@ -1934,7 +1935,7 @@ Statistics for column %(col)s
         count+=1
     return count
 
-  def Correl(self, col1, col2):
+  def correl(self, col1, col2):
     """
     Calculate the Pearson correlation coefficient between *col1* and *col2*, only
     taking rows into account where both of the values are not equal to *None*.
@@ -1947,20 +1948,20 @@ Statistics for column %(col)s
     :param col2: column name for second column
     :type col2: :class:`str`
     """
-    if IsStringLike(col1) and IsStringLike(col2):
-      col1 = self.GetColIndex(col1)
-      col2 = self.GetColIndex(col2)
+    if is_string_like(col1) and is_string_like(col2):
+      col1 = self.col_index(col1)
+      col2 = self.col_index(col2)
     vals1, vals2=([],[])
     for v1, v2 in zip(self[col1], self[col2]):
       if v1!=None and v2!=None:
         vals1.append(v1)
         vals2.append(v2)
     try:
-      return stutil.Correl(vals1, vals2)
+      return stutil.correl(vals1, vals2)
     except:
       return None
 
-  def SpearmanCorrel(self, col1, col2):
+  def spearman_correl(self, col1, col2):
     """
     Calculate the Spearman correlation coefficient between col1 and col2, only 
     taking rows into account where both of the values are not equal to None. If 
@@ -1978,9 +1979,9 @@ Statistics for column %(col)s
     try:
       import scipy.stats.mstats
       
-      if IsStringLike(col1) and IsStringLike(col2):
-        col1 = self.GetColIndex(col1)
-        col2 = self.GetColIndex(col2)
+      if is_string_like(col1) and is_string_like(col2):
+        col1 = self.col_index(col1)
+        col2 = self.col_index(col2)
       vals1, vals2=([],[])
       for v1, v2 in zip(self[col1], self[col2]):
         if v1!=None and v2!=None:
@@ -1999,10 +2000,10 @@ Statistics for column %(col)s
       raise
     
 
-  def Save(self, stream_or_filename, format='ost', sep=','):
+  def save(self, stream_or_filename, format='ost', sep=','):
     """
-    Save the table to stream or filename. The following three file formats
-    are supported (for more information on file formats, see :meth:`Load`):
+    save the table to stream or filename. The following three file formats
+    are supported (for more information on file formats, see :meth:`load`):
 
     =============   =======================================
     ost             ost-specific format (human readable)
@@ -2022,23 +2023,23 @@ Statistics for column %(col)s
     """
     format=format.lower()
     if format=='ost':
-      return self._SaveOST(stream_or_filename)
+      return self._save_ost(stream_or_filename)
     if format=='csv':
-      return self._SaveCSV(stream_or_filename, sep=sep)
+      return self._save_csv(stream_or_filename, sep=sep)
     if format=='pickle':
-      return self._SavePickle(stream_or_filename)
+      return self._save_pickle(stream_or_filename)
     if format=='html':
-      return self._SaveHTML(stream_or_filename)
+      return self._save_html(stream_or_filename)
     if format=='context':
-      return self._SaveContext(stream_or_filename)
+      return self._save_context(stream_or_filename)
     raise ValueError('unknown format "%s"' % format)
 
-  def _SavePickle(self, stream):
+  def _save_pickle(self, stream):
     if not hasattr(stream, 'write'):
       stream=open(stream, 'wb')
     cPickle.dump(self, stream, cPickle.HIGHEST_PROTOCOL)
 
-  def _SaveHTML(self, stream_or_filename):
+  def _save_html(self, stream_or_filename):
     def _escape(s):
       return s.replace('&', '&amp;').replace('>', '&gt;').replace('<', '&lt;')
 
@@ -2071,7 +2072,7 @@ Statistics for column %(col)s
     stream.write('</table>')
     if file_opened:
       stream.close()
-  def _SaveContext(self, stream_or_filename):
+  def _save_context(self, stream_or_filename):
     file_opened = False
     if not hasattr(stream_or_filename, 'write'):
       stream = open(stream_or_filename, 'w')
@@ -2111,7 +2112,7 @@ Statistics for column %(col)s
     if file_opened:
       stream.close()
 
-  def _SaveCSV(self, stream, sep):
+  def _save_csv(self, stream, sep):
     if not hasattr(stream, 'write'):
       stream=open(stream, 'wb')
 
@@ -2124,7 +2125,7 @@ Statistics for column %(col)s
           row[i]='NA'
       writer.writerow(row)
 
-  def _SaveOST(self, stream):
+  def _save_ost(self, stream):
     if hasattr(stream, 'write'):
       writer=csv.writer(stream, delimiter=' ')
     else:
@@ -2141,7 +2142,7 @@ Statistics for column %(col)s
       writer.writerow(row)
   
      
-  def GetNumpyMatrix(self, *args):
+  def get_numpy_matrix(self, *args):
     '''
     Returns a numpy matrix containing the selected columns from the table as 
     columns in the matrix.
@@ -2160,7 +2161,7 @@ Statistics for column %(col)s
       
       idxs = []
       for arg in args:
-        idx = self.GetColIndex(arg)
+        idx = self.col_index(arg)
         col_type = self.col_types[idx]
         if col_type!='int' and col_type!='float':
           raise TypeError("Numpy matrix can only be generated from numeric column types")
@@ -2174,7 +2175,7 @@ Statistics for column %(col)s
     
 
 
-  def GaussianSmooth(self, col, std=1.0, na_value=0.0, padding='reflect', c=0.0):
+  def gaussian_smooth(self, col, std=1.0, na_value=0.0, padding='reflect', c=0.0):
 
     '''
     In place gaussian smooth of a column in the table with a given standard deviation.
@@ -2207,10 +2208,10 @@ Statistics for column %(col)s
       print "I need scipy.ndimage and numpy, but could not import it"
       raise
       
-    idx = self.GetColIndex(col)
+    idx = self.col_index(col)
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float':
-      raise TypeError("GaussianSmooth can only be used on numeric column types")
+      raise TypeError("gaussian_smooth can only be used on numeric column types")
 
     vals=[]
     for v in self[col]:
@@ -2230,7 +2231,7 @@ Statistics for column %(col)s
     self[col]=result
 
 
-  def GetOptimalPrefactors(self, ref_col, *args, **kwargs):
+  def optimal_prefactors(self, ref_col, *args, **kwargs):
     '''
     This returns the optimal prefactor values (i.e. a, b, c, ...) for the
     following equation
@@ -2258,7 +2259,7 @@ Statistics for column %(col)s
     
     .. code-block:: python
     
-      tab.GetOptimalPrefactors('colC', 'colA', 'colB')
+      tab.optimal_prefactors('colC', 'colA', 'colB')
     
     The function returns a list of containing the prefactors a, b, c, ... in 
     the correct order (i.e. same as columns were specified in \*args).
@@ -2281,7 +2282,7 @@ Statistics for column %(col)s
     
     .. code-block:: python
     
-      tab.GetOptimalPrefactors('colC', 'colA', 'colB', weights='colD')
+      tab.optimal_prefactors('colC', 'colA', 'colB', weights='colD')
     
     '''
     try:
@@ -2290,12 +2291,12 @@ Statistics for column %(col)s
       if len(args)==0:
         raise RuntimeError("At least one column must be specified.")
       
-      b = self.GetNumpyMatrix(ref_col)
-      a = self.GetNumpyMatrix(*args)
+      b = self.get_numpy_matrix(ref_col)
+      a = self.get_numpy_matrix(*args)
       
       if len(kwargs)!=0:
         if kwargs.has_key('weights'):
-          w = self.GetNumpyMatrix(kwargs['weights'])
+          w = self.get_numpy_matrix(kwargs['weights'])
           b = np.multiply(b,w)
           a = np.multiply(a,w)
           
@@ -2309,7 +2310,7 @@ Statistics for column %(col)s
       print "Function needs numpy, but I could not import it."
       raise
 
-  def PlotEnrichment(self, score_col, class_col, score_dir='-', 
+  def plot_enrichment(self, score_col, class_col, score_dir='-', 
                      class_dir='-', class_cutoff=2.0,
                      style='-', title=None, x_title=None, y_title=None,
                      clear=True, save=None):
@@ -2318,14 +2319,14 @@ Statistics for column %(col)s
     according to *class_col*.
     
     For more information about parameters of the enrichment, see
-    :meth:`ComputeEnrichment`, and for plotting see :meth:`Plot`.
+    :meth:`compute_enrichment`, and for plotting see :meth:`Plot`.
     
     :warning: The function depends on *matplotlib*
     '''
     try:
       import matplotlib.pyplot as plt
     
-      enrx, enry = self.ComputeEnrichment(score_col, class_col, score_dir,
+      enrx, enry = self.compute_enrichment(score_col, class_col, score_dir,
                                           class_dir, class_cutoff)
       
       if not title:
@@ -2354,7 +2355,7 @@ Statistics for column %(col)s
       print "Function needs matplotlib, but I could not import it."
       raise
     
-  def ComputeEnrichment(self, score_col, class_col, score_dir='-', 
+  def compute_enrichment(self, score_col, class_col, score_dir='-', 
                         class_dir='-', class_cutoff=2.0):
     '''
     Computes the enrichment of column *score_col* classified according to
@@ -2383,12 +2384,12 @@ Statistics for column %(col)s
     
     ALLOWED_DIR = ['+','-']
     
-    score_idx = self.GetColIndex(score_col)
+    score_idx = self.col_index(score_col)
     score_type = self.col_types[score_idx]
     if score_type!='int' and score_type!='float':
       raise TypeError("Score column must be numeric type")
     
-    class_idx = self.GetColIndex(class_col)
+    class_idx = self.col_index(class_col)
     class_type = self.col_types[class_idx]
     if class_type!='int' and class_type!='float' and class_type!='bool':
       raise TypeError("Classifier column must be numeric or bool type")
@@ -2396,7 +2397,7 @@ Statistics for column %(col)s
     if (score_dir not in ALLOWED_DIR) or (class_dir not in ALLOWED_DIR):
       raise ValueError("Direction must be one of %s"%str(ALLOWED_DIR))
     
-    self.Sort(score_col, score_dir)
+    self.sort(score_col, score_dir)
     
     x = [0]
     y = [0]
@@ -2434,21 +2435,21 @@ Statistics for column %(col)s
     y = [float(v)/y[-1] for v in y]
     return x,y
     
-  def ComputeEnrichmentAUC(self, score_col, class_col, score_dir='-', 
+  def compute_enrichment_auc(self, score_col, class_col, score_dir='-', 
                            class_dir='-', class_cutoff=2.0):
     '''
     Computes the area under the curve of the enrichment using the trapezoidal
     rule.
     
     For more information about parameters of the enrichment, see
-    :meth:`ComputeEnrichment`.
+    :meth:`compute_enrichment`.
 
     :warning: The function depends on *numpy*
     '''
     try:
       import numpy as np
       
-      enr = self.ComputeEnrichment(score_col, class_col, score_dir,
+      enr = self.compute_enrichment(score_col, class_col, score_dir,
                                           class_dir, class_cutoff)
       
       if enr==None:
@@ -2458,7 +2459,7 @@ Statistics for column %(col)s
       print "Function needs numpy, but I could not import it."
       raise
 
-  def ComputeROC(self, score_col, class_col, score_dir='-',
+  def compute_roc(self, score_col, class_col, score_dir='-',
                  class_dir='-', class_cutoff=2.0):
     '''
     Computes the receiver operating characteristics (ROC) of column *score_col*
@@ -2491,12 +2492,12 @@ Statistics for column %(col)s
 
     ALLOWED_DIR = ['+','-']
 
-    score_idx = self.GetColIndex(score_col)
+    score_idx = self.col_index(score_col)
     score_type = self.col_types[score_idx]
     if score_type!='int' and score_type!='float':
       raise TypeError("Score column must be numeric type")
 
-    class_idx = self.GetColIndex(class_col)
+    class_idx = self.col_index(class_col)
     class_type = self.col_types[class_idx]
     if class_type!='int' and class_type!='float' and class_type!='bool':
       raise TypeError("Classifier column must be numeric or bool type")
@@ -2504,7 +2505,7 @@ Statistics for column %(col)s
     if (score_dir not in ALLOWED_DIR) or (class_dir not in ALLOWED_DIR):
       raise ValueError("Direction must be one of %s"%str(ALLOWED_DIR))
 
-    self.Sort(score_col, score_dir)
+    self.sort(score_col, score_dir)
 
     x = [0]
     y = [0]
@@ -2545,21 +2546,21 @@ Statistics for column %(col)s
     y = [float(v)/y[-1] for v in y]
     return x,y
 
-  def ComputeROCAUC(self, score_col, class_col, score_dir='-',
+  def compute_roc_auc(self, score_col, class_col, score_dir='-',
                     class_dir='-', class_cutoff=2.0):
     '''
     Computes the area under the curve of the receiver operating characteristics
     using the trapezoidal rule.
     
     For more information about parameters of the ROC, see
-    :meth:`ComputeROC`.
+    :meth:`compute_roc`.
 
     :warning: The function depends on *numpy*
     '''
     try:
       import numpy as np
 
-      roc = self.ComputeROC(score_col, class_col, score_dir,
+      roc = self.compute_roc(score_col, class_col, score_dir,
                             class_dir, class_cutoff)
 
       if not roc:
@@ -2569,7 +2570,7 @@ Statistics for column %(col)s
       print "Function needs numpy, but I could not import it."
       raise
 
-  def PlotROC(self, score_col, class_col, score_dir='-',
+  def plot_roc(self, score_col, class_col, score_dir='-',
               class_dir='-', class_cutoff=2.0,
               style='-', title=None, x_title=None, y_title=None,
               clear=True, save=None):
@@ -2577,7 +2578,7 @@ Statistics for column %(col)s
     Plot an ROC curve using matplotlib.
     
     For more information about parameters of the ROC, see
-    :meth:`ComputeROC`, and for plotting see :meth:`Plot`.
+    :meth:`compute_roc`, and for plotting see :meth:`Plot`.
 
     :warning: The function depends on *matplotlib*
     '''
@@ -2585,7 +2586,7 @@ Statistics for column %(col)s
     try:
       import matplotlib.pyplot as plt
 
-      roc = self.ComputeROC(score_col, class_col, score_dir,
+      roc = self.compute_roc(score_col, class_col, score_dir,
                                    class_dir, class_cutoff)
       
       if not roc:
@@ -2619,7 +2620,7 @@ Statistics for column %(col)s
       print "Function needs matplotlib, but I could not import it."
       raise
     
-  def ComputeMCC(self, score_col, class_col, score_dir='-',
+  def compute_mcc(self, score_col, class_col, score_dir='-',
                  class_dir='-', score_cutoff=2.0, class_cutoff=2.0):
     '''
     Compute Matthews correlation coefficient (MCC) for one column (*score_col*)
@@ -2644,12 +2645,12 @@ Statistics for column %(col)s
     '''
     ALLOWED_DIR = ['+','-']
 
-    score_idx = self.GetColIndex(score_col)
+    score_idx = self.col_index(score_col)
     score_type = self.col_types[score_idx]
     if score_type!='int' and score_type!='float' and score_type!='bool':
       raise TypeError("Score column must be numeric or bool type")
 
-    class_idx = self.GetColIndex(class_col)
+    class_idx = self.col_index(class_col)
     class_type = self.col_types[class_idx]
     if class_type!='int' and class_type!='float' and class_type!='bool':
       raise TypeError("Classifier column must be numeric or bool type")
@@ -2695,7 +2696,7 @@ Statistics for column %(col)s
     return mcc
     
 
-  def IsEmpty(self, col_name=None, ignore_nan=True):
+  def empty(self, col_name=None, ignore_nan=True):
     '''
     Checks if a table is empty.
     
@@ -2715,7 +2716,7 @@ Statistics for column %(col)s
     
     # column name specified
     if col_name:
-      if self.Count(col_name, ignore_nan=ignore_nan)==0:
+      if self.count(col_name, ignore_nan=ignore_nan)==0:
         return True
       else:
         return False
@@ -2732,7 +2733,7 @@ Statistics for column %(col)s
     return True
     
 
-  def Extend(self, tab, overwrite=None):
+  def extend(self, tab, overwrite=None):
     """
     Append each row of *tab* to the current table. The data is appended based
     on the column names, thus the order of the table columns is *not* relevant,
@@ -2754,13 +2755,13 @@ Statistics for column %(col)s
     # add column to current table if it doesn't exist
     for name,typ in zip(tab.col_names, tab.col_types):
       if not name in self.col_names:
-        self.AddCol(name, typ)
+        self.add_col(name, typ)
     
     # check that column types are the same in current and new table
     for name in self.col_names:
       if name in tab.col_names:
-        curr_type = self.col_types[self.GetColIndex(name)]
-        new_type = tab.col_types[tab.GetColIndex(name)]
+        curr_type = self.col_types[self.col_index(name)]
+        new_type = tab.col_types[tab.col_index(name)]
         if curr_type!=new_type:
           raise TypeError('cannot extend table, column %s in new '%name +\
                           'table different type (%s) than in '%new_type +\
@@ -2770,10 +2771,10 @@ Statistics for column %(col)s
     for i in range(0,num_rows):
       row = tab.rows[i]
       data = dict(zip(tab.col_names,row))
-      self.AddRow(data, overwrite)
+      self.add_row(data, overwrite)
     
 
-def Merge(table1, table2, by, only_matching=False):
+def merge(table1, table2, by, only_matching=False):
   """
   Returns a new table containing the data from both tables. The rows are 
   combined based on the common values in the column(s) by. The option 'by' can
@@ -2862,7 +2863,7 @@ def Merge(table1, table2, by, only_matching=False):
         row[len(table1.col_names)+i]=row2[index]
     if only_matching and not matched:
       continue
-    new_tab.AddRow(row)
+    new_tab.add_row(row)
   if only_matching:
     return new_tab
   for k, v in common2.iteritems():
@@ -2871,6 +2872,6 @@ def Merge(table1, table2, by, only_matching=False):
       row=[None for i in range(len(table1.col_names))]+v2
       for common1_index, common2_index in zip(common1_indices, common2_indices):
         row[common1_index]=v[common2_index]
-      new_tab.AddRow(row)
+      new_tab.add_row(row)
   return new_tab
 

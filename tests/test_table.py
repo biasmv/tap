@@ -8,7 +8,6 @@ import os
 import unittest
 import glob
 
-from table import *
 HAS_NUMPY=True
 HAS_SCIPY=True
 HAS_MPL=True
@@ -39,53 +38,32 @@ except ImportError:
   HAS_PIL=False
   print "Could not find python imagine library: ignoring some table class unit tests"
 
+from table import *
+import fixtures
 class TestTable(unittest.TestCase):
 
   def tearDown(self):
     for filename in glob.glob('*_out.*'):
       os.remove(filename)
 
-  def CreateTestTable(self):
-    '''
-    creates a table with some test data
-    
-      first  second  third 
-    ----------------------
-     x            3     NA
-     foo         NA  2.200
-     NA           9  3.300
-
-    '''
-    tab = Table()
-    tab.add_col('first', 'string')
-    tab.add_col('second', 'int')
-    tab.add_col('third', 'float')
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 0)
-    self.CompareColTypes(tab, ['first','second', 'third'], 'sif')
-    tab.add_row(['x',3, None], overwrite=None)
-    tab.add_row(['foo',None, 2.2], overwrite=None)
-    tab.add_row([None,9, 3.3], overwrite=None)
-    return tab
-
   def CompareRowcount(self, t, row_count):
     '''
     Compare the number of rows
     '''
     self.assertEqual(len(t.rows),
-                     row_count,
-                     "row count (%i) different from expected value (%i)" \
-                     %(len(t.rows), row_count))
-  
+                      row_count,
+                      "row count (%i) different from expected value (%i)" \
+                      %(len(t.rows), row_count))
+
   def CompareColcount(self, t, col_count):
     '''
     Compare the number of columns
     '''
     self.assertEqual(len(t.col_names),
-                     col_count,
-                     "column count (%i) different from expected value (%i)" \
-                     %(len(t.col_names), col_count))
-  
+                      col_count,
+                      "column count (%i) different from expected value (%i)" \
+                      %(len(t.col_names), col_count))
+
   def CompareColNames(self, t, col_names):
     '''
     Compare all column names of the table with a list of reference col names
@@ -93,10 +71,10 @@ class TestTable(unittest.TestCase):
     self.CompareColcount(t, len(col_names))
     for i, (col_name, ref_name) in enumerate(zip(t.col_names, col_names)):
         self.assertEqual(col_name,
-                         ref_name,
-                         "column name (%s) different from expected name (%s) at col %i" \
-                         %(col_name, ref_name, i))
-  
+                          ref_name,
+                          "column name (%s) different from expected name (%s) at col %i" \
+                          %(col_name, ref_name, i))
+
   def CompareDataFromDict(self, t, data_dict):
     '''
     Compare all values of a table with reference values given in the form of a
@@ -117,14 +95,14 @@ class TestTable(unittest.TestCase):
     for i, (row, ref) in enumerate(zip(t.rows, ref_data)):
       if (isinstance(ref, float) or isinstance(ref, int)) and (isinstance(row[idx], float) or isinstance(row[idx], int)):
         self.assertAlmostEqual(row[idx],
-                               ref,
-                               msg="data (%s) in col (%s), row (%i) different from expected value (%s)" \
-                               %(row[idx], col_name, i, ref))
+                                ref,
+                                msg="data (%s) in col (%s), row (%i) different from expected value (%s)" \
+                                %(row[idx], col_name, i, ref))
       else:
         self.assertEqual(row[idx],
-                         ref,
-                         "data (%s) in col (%s), row (%i) different from expected value (%s)" \
-                         %(row[idx], col_name, i, ref))
+                          ref,
+                          "data (%s) in col (%s), row (%i) different from expected value (%s)" \
+                          %(row[idx], col_name, i, ref))
 
   def CompareColTypes(self, t, col_names, ref_types):
     '''
@@ -139,15 +117,15 @@ class TestTable(unittest.TestCase):
     if type(col_names)==str:
       col_names = [col_names]
     self.assertEqual(len(col_names),
-                     len(ref_types),
-                     "number of col names (%i) different from number of reference col types (%i)" \
-                     %(len(col_names), len(ref_types)))
+                      len(ref_types),
+                      "number of col names (%i) different from number of reference col types (%i)" \
+                      %(len(col_names), len(ref_types)))
     idxs = [t.col_index(x) for x in col_names]
     for idx, ref_type in zip(idxs, ref_types):
       self.assertEqual(t.col_types[idx],
-                       ref_type,
-                       "column type (%s) at column %i, different from reference col type (%s)" \
-                       %(t.col_types[idx], idx, ref_type))
+                        ref_type,
+                        "column type (%s) at column %i, different from reference col type (%s)" \
+                        %(t.col_types[idx], idx, ref_type))
 
   def CompareImages(self, img1, img2):
     '''
@@ -160,7 +138,7 @@ class TestTable(unittest.TestCase):
     self.assertEqual(diff.getbbox(),None)
 
   def testAllowsTosearch_col_names(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.assertEquals(tab.search_col_names('d$'), ['second', 'third'])
     self.assertEquals(tab.search_col_names('(first|third)'), ['first','third'])
 
@@ -721,17 +699,17 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError, Table, ['x'], ['foo'])
     
   def testremove_col(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.remove_col("second")
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'third': [None,2.2,3.3]})
     
     # raise error when column is unknown
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.assertRaises(ValueError, tab.remove_col, "unknown col")
     
   def testsortTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.sort('first', '-')
     self.CompareDataFromDict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
@@ -748,7 +726,7 @@ class TestTable(unittest.TestCase):
     self.assertEqual(Table._guess_format('table_test.xyz'), 'ost')
     
   def testsaveloadTableAutoFormat(self):   
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
 
     # write to disc
@@ -799,7 +777,7 @@ class TestTable(unittest.TestCase):
     self.assertEquals(tab.col_types, ['float','float','float','float','float'])
 
   def testsaveloadTableOST(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     
     # write to disc
@@ -825,7 +803,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(IOError, Table.load, in_stream)
     
   def testsaveloadTableOSTWithSpaces(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_row(['hello spaces',10, 10.1], overwrite=None)
     self.CompareDataFromDict(tab, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
 
@@ -837,20 +815,20 @@ class TestTable(unittest.TestCase):
     self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
   def testsaveTableHTML(self):
     import StringIO
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     stream = StringIO.StringIO()
     tab.save(stream, format='html')
     self.assertEqual(stream.getvalue(), '<table><tr><th>first</th><th>second</th><th>third</th></tr><tr><td>x</td><td>3</td><td></td></tr><tr><td>foo</td><td></td><td>2.200</td></tr><tr><td></td><td>9</td><td>3.300</td></tr></table>')
   def testsaveTableContext(self):
     import StringIO
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     stream = StringIO.StringIO()
     tab.save(stream, format='context')
     self.assertEqual(stream.getvalue(), 
                      '\\starttable[l|r|i3r|]\n\\HL\n\\NC \\bf first\\NC \\bf second\\NC \\bf third \\AR\\HL\n\\NC x\\NC 3\\NC --- \\AR\n\\NC foo\NC ---\NC 2.200 \\AR\n\\NC ---\\NC 9\\NC 3.300 \\AR\n\\HL\n\\stoptable')
 
   def testsaveloadTableCSV(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
 
     # write to disc
@@ -870,7 +848,7 @@ class TestTable(unittest.TestCase):
     self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
   
   def testsaveloadTablePickle(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     # write to disc
     tab.save("saveloadtable_filename_out.pickle", format='pickle')
@@ -934,7 +912,7 @@ class TestTable(unittest.TestCase):
     self.CompareDataFromDict(tab_merged, {'x': [1,3], 'y': [10,20], 'u': [100,200]})
     
   def testfilterTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_row(['foo',1,5.15])
     tab.add_row(['foo',0,1])
     tab.add_row(['foo',1,12])
@@ -955,7 +933,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.filter,first='foo',nonexisting=1)
     
   def testminTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[True,True,False])
 
     self.assertEquals(tab.min('first'),'foo')
@@ -977,7 +955,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.min_row,'fifth')
     
   def testmaxTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,True])
     
     self.assertEquals(tab.max('first'),'x')
@@ -999,7 +977,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.max_row,'fifth')
     
   def testsumTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
     
@@ -1011,7 +989,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.sum,'sixth')
     
   def testmedianTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
     
@@ -1023,7 +1001,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.median,'sixth')
     
   def testmeanTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
     
@@ -1043,7 +1021,7 @@ class TestTable(unittest.TestCase):
      NA           9  3.300      3
      NA          NA     NA     NA
     '''
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','float',[1,2,3])
     tab.add_row([None, None, None, None])
     
@@ -1057,7 +1035,7 @@ class TestTable(unittest.TestCase):
     
     
   def teststd_devTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
     
@@ -1069,7 +1047,7 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError,tab.std_dev,'sixth')
     
   def testcountTable(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     
     self.assertEquals(tab.count('first'),2)
@@ -1127,35 +1105,6 @@ class TestTable(unittest.TestCase):
     self.assertRaises(ValueError, tab.compute_enrichment, score_col='score',
                       score_dir='+', class_col='rmsd', class_cutoff=2.0,
                       class_dir='y')
-    
-  def testPlot(self):
-    if not HAS_MPL or not HAS_NUMPY:
-      return
-    tab = self.CreateTestTable()
-    self.assertRaises(ValueError, tab.Plot, 'second', x_range=1)
-    self.assertRaises(ValueError, tab.Plot, x='second', y='third', y_range=[1,2,3])
-    self.assertRaises(ValueError, tab.Plot, x='second', y='third', z_range='st')
-
-  def testHexbin(self):
-    if not HAS_MPL or not HAS_NUMPY:
-      return
-    tab = self.CreateTestTable()
-    self.assertRaises(ValueError, tab.plot_hexbin, x='second', y='third', x_range=1)
-    self.assertRaises(ValueError, tab.plot_hexbin, x='second', y='third', x_range=[1,2,3])
-
-  def testplot_enrichment(self):
-    if not HAS_MPL or not HAS_PIL:
-      return
-    tab = Table(['score', 'rmsd', 'classific'], 'ffb',
-                score=[2.64,1.11,2.17,0.45,0.15,0.85,1.13,2.90,0.50,1.03,1.46,2.83,1.15,2.04,0.67,1.27,2.22,1.90,0.68,0.36,1.04,2.46,0.91,0.60],
-                rmsd=[9.58,1.61,7.48,0.29,1.68,3.52,3.34,8.17,4.31,2.85,6.28,8.78,0.41,6.29,4.89,7.30,4.26,3.51,3.38,0.04,2.21,0.24,7.58,8.40],
-                classific=[False,True,False,True,True,False,False,False,False,False,False,False,True,False,False,False,False,False,False,True,False,True,False,False])
- 
-    pl = tab.plot_enrichment(score_col='score', score_dir='-',
-                            class_col='rmsd', class_cutoff=2.0,
-                            class_dir='-',
-                            save=os.path.join("tests/data","enrichment-out.png"))
-    img1 = Image.open(os.path.join("tests/data","enrichment-out.png"))
     
   def testCalcEnrichmentAUCwithNone(self):
     if not HAS_NUMPY:
@@ -1338,7 +1287,7 @@ class TestTable(unittest.TestCase):
      NA           9  3.300  False
     '''
     
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_col('fourth','b',[True, False, False])
     m = tab.get_numpy_matrix('second')
     mc = np.matrix([[3],[None],[9]])
@@ -1489,7 +1438,7 @@ class TestTable(unittest.TestCase):
     self.assertFalse(tab.empty('c', ignore_nan=False))
     
   def testUnique(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab.add_row(['foo',4, 3.3])
     tab.add_row([None,5, 6.3])
     self.assertEquals(tab.get_unique('first'), ['x','foo'])
@@ -1500,7 +1449,7 @@ class TestTable(unittest.TestCase):
     self.assertEquals(tab.get_unique('third', ignore_nan=False), [None, 2.2, 3.3, 6.3])
     
   def testcorrel(self):
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.assertEquals(tab.correl('second','third'), None)
     tab.add_row(['foo',4, 3.3])
     tab.add_row([None,5, 6.3])
@@ -1510,7 +1459,7 @@ class TestTable(unittest.TestCase):
   def testspearman_correl(self):
     if not HAS_SCIPY:
       return
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.assertEquals(tab.spearman_correl('second','third'), None)
     tab.add_row(['foo',4, 3.3])
     tab.add_row([None,5, 6.3])
@@ -1527,7 +1476,7 @@ class TestTable(unittest.TestCase):
     '''
     
     # simple extend of the same table
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     self.CompareDataFromDict(tab, {'first': ['x','foo',None],
                                    'second': [3,None,9],
                                    'third': [None,2.2,3.3]})
@@ -1538,8 +1487,8 @@ class TestTable(unittest.TestCase):
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
     # simple extend of different tables with the same data
-    tab = self.CreateTestTable()
-    tab2 = self.CreateTestTable()
+    tab = fixtures.create_test_table()
+    tab2 = fixtures.create_test_table()
     tab.extend(tab2)
     self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
                                    'second': [3,None,9,3,None,9],
@@ -1549,8 +1498,8 @@ class TestTable(unittest.TestCase):
                                     'third': [None,2.2,3.3]})
     
     # add additional columns to current table
-    tab = self.CreateTestTable()
-    tab2 = self.CreateTestTable()
+    tab = fixtures.create_test_table()
+    tab2 = fixtures.create_test_table()
     tab2.add_col('foo','i',[1,2,3])
     tab.extend(tab2)
     self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
@@ -1559,7 +1508,7 @@ class TestTable(unittest.TestCase):
                                    'foo': [None,None,None,1,2,3]})     
     
     # different order of the data
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab2 = Table(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.3],
@@ -1574,8 +1523,8 @@ class TestTable(unittest.TestCase):
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
     # with overwrite (additional column)
-    tab = self.CreateTestTable()
-    tab2 = self.CreateTestTable()
+    tab = fixtures.create_test_table()
+    tab2 = fixtures.create_test_table()
     tab2.add_col('foo','i',[1,2,3])
     tab.extend(tab2, overwrite='first')
     self.CompareDataFromDict(tab, {'first': ['x','foo',None],
@@ -1584,7 +1533,7 @@ class TestTable(unittest.TestCase):
                                    'foo': [1,2,3]})
     
     # with overwrite (no matching value)
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab2 = Table(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.3],
@@ -1596,7 +1545,7 @@ class TestTable(unittest.TestCase):
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
     # with overwrite (with matching values)
-    tab = self.CreateTestTable()
+    tab = fixtures.create_test_table()
     tab2 = Table(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.4],

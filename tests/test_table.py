@@ -215,14 +215,6 @@ class TestTable(unittest.TestCase):
     self.CompareRowcount(tab, 0)
     self.assertRaises(ValueError, tab.col_index, 'a')
     
-  def testguess_col_type(self):
-    self.assertEqual(guess_col_type(['1', '1.3', '2']), 'float')
-    self.assertEqual(guess_col_type(['1', '1', '2']), 'int')
-    self.assertEqual(guess_col_type(['NONE', '1', '1', '2']), 'int')
-    self.assertEqual(guess_col_type(['NONE', '1', '1', '2']), 'int')
-    self.assertEqual(guess_col_type(['NONE', '1', '1', 'a']), 'string')
-    self.assertEqual(guess_col_type(['NONE', 'TRUE', 'False']), 'bool')
-    self.assertEqual(guess_col_type(['NONE']), 'string')
   def testTableInitSingleColEmpty(self):
     '''
     empty table with one float column:

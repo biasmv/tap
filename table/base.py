@@ -436,6 +436,16 @@ Statistics for column %(col)s
       # if not overwrite or overwrite did not find appropriate row
       if not overwrite or not added:
         self.rows.append(new_row)
+
+  def _ensure_col_type(self, func, col, ty): 
+    idx = self.col_index(col)
+    col_type = self.col_types[idx]
+    if ty == 'numeric' and col_type in ('float', 'int', 'bool'):
+      return idx
+    if ty == col_type:
+      return idx
+    msg = '%s requires a %s column, but %s is of type %s' 
+    raise TypeError(msg% (func, ty, col, col_type))
       
   def paired_t_test(self, col_a, col_b):
     """
@@ -1041,10 +1051,7 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.col_index(col)
-    col_type = self.col_types[idx]
-    if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("sum can only be used on numeric column types")
+    self._ensure_col_type('sum', col, 'numeric')
 
     return sum([x for x in self[col] if x!=None])
 
@@ -1062,11 +1069,8 @@ Statistics for column %(col)s
 
     :raises: :class:`TypeError` if column type is ``string``
     """
-    idx = self.col_index(col)
-    col_type = self.col_types[idx]
-    if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("mean can only be used on numeric or bool column types")
-    
+    self._ensure_col_type('mean', col, 'numeric') 
+
     vals = [v for v in self[col] if v!=None]
 
     try:
@@ -1127,11 +1131,7 @@ Statistics for column %(col)s
     
     cols_idxs = []
     for col in cols:
-      idx = self.col_index(col)
-      col_type = self.col_types[idx]
-      if col_type!='int' and col_type!='float' and col_type!='bool':
-        raise TypeError("row_mean can only be used on numeric column types")
-      cols_idxs.append(idx)
+      cols_idxs.append(self._ensure_col_type('mean', col, 'numeric'))
       
     mean_rows = []
     for row in self.rows:
@@ -1166,11 +1166,7 @@ Statistics for column %(col)s
     :raises: :class:`TypeError` if column type is ``string``
     :returns: List of percentils in the same order as given in *nths*
     """
-    idx = self.col_index(col)
-    col_type = self.col_types[idx]
-    if col_type!='int' and col_type!='float' and col_type!='bool':
-      raise TypeError("median can only be used on numeric column types")
-    
+    self._ensure_col_type('percentiles', col, 'numeric')
     for nth in nths:
       if nth < 0 or nth > 100:
         raise ValueError("percentiles must be between 0 and 100")
@@ -1226,7 +1222,7 @@ Statistics for column %(col)s
     if col_type!='int' and col_type!='float' and col_type!='bool':
       raise TypeError("std_dev can only be used on numeric column types")
     
-    vals=[]
+    vals=[v for v in self[col] if v!=None]
     for v in self[col]:
       if v!=None:
         vals.append(v)

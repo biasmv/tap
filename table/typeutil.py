@@ -60,6 +60,7 @@ def guess_col_type(iterable):
   # return the last element available
   return possibilities.pop()
 
+
 def coerce(value, ty):
   '''
   Try to convert values (e.g. from :class:`str` type) to the specified type

@@ -1990,29 +1990,20 @@ Statistics for column %(col)s
     containing only NAN values is considered as empty. By specifying the 
     option ignore_nan=False, NAN values are counted as 'normal' values.
     '''
-    
-    # table with no columns and no rows
-    if len(self.col_names)==0:
-      if col_name:
-        raise ValueError('Table has no column named "%s"' % col_name)
-      return True
-    
     # column name specified
     if col_name:
-      if self.count(col_name, ignore_nan=ignore_nan)==0:
-        return True
-      else:
-        return False
-      
+      # FIXME: This is O(n) operation, should be O(1), at least for the 
+      #        ignore_nan=False case.
+      return self.count(col_name, ignore_nan=ignore_nan)==0
+
     # no column name specified -> test whole table
-    else:
-      for row in self.rows:
-        for cell in row:
-          if ignore_nan:
-            if cell!=None:
-              return False
-          else:
-            return False
+    if not ignore_nan:
+      return len(self.rows)==0
+
+    for row in self.rows:
+      for cell in row:
+        if cell!=None:
+          return False
     return True
     
 

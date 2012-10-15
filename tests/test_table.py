@@ -46,7 +46,7 @@ class TestTable(unittest.TestCase):
     for filename in glob.glob('*_out.*'):
       os.remove(filename)
 
-  def CompareRowcount(self, t, row_count):
+  def compare_row_count(self, t, row_count):
     '''
     Compare the number of rows
     '''
@@ -55,7 +55,7 @@ class TestTable(unittest.TestCase):
                       "row count (%i) different from expected value (%i)" \
                       %(len(t.rows), row_count))
 
-  def CompareColcount(self, t, col_count):
+  def compare_col_count(self, t, col_count):
     '''
     Compare the number of columns
     '''
@@ -68,7 +68,7 @@ class TestTable(unittest.TestCase):
     '''
     Compare all column names of the table with a list of reference col names
     '''
-    self.CompareColcount(t, len(col_names))
+    self.compare_col_count(t, len(col_names))
     for i, (col_name, ref_name) in enumerate(zip(t.col_names, col_names)):
         self.assertEqual(col_name,
                           ref_name,
@@ -80,7 +80,7 @@ class TestTable(unittest.TestCase):
     Compare all values of a table with reference values given in the form of a
     dictionary containing a list of values for each column.
     '''
-    self.CompareColcount(t, len(data_dict))
+    self.compare_col_count(t, len(data_dict))
     for k, v in data_dict.iteritems():
       self.CompareDataForCol(t, k, v)
       
@@ -89,7 +89,7 @@ class TestTable(unittest.TestCase):
     Compare the values of each row of ONE column specified by its name with
     the reference values specified as a list of values for this column.
     '''
-    self.CompareRowcount(t, len(ref_data))
+    self.compare_row_count(t, len(ref_data))
     idx = t.col_index(col_name)
     col_type = t.col_types[idx]
     for i, (row, ref) in enumerate(zip(t.rows, ref_data)):
@@ -184,13 +184,10 @@ class TestTable(unittest.TestCase):
     for i in (35,15,50,40,20):
       tab.add_row([i])
     self.assertEqual(tab.percentiles('nums', [0,30,40,100]), [15,20,35,50])
-  def testTableInitEmpty(self):
-    '''
-    empty table
-    '''
+  def test_default_initialises_to_empty_table(self):
     tab = Table()
-    self.CompareColcount(tab, 0)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 0)
+    self.compare_row_count(tab, 0)
     self.assertRaises(ValueError, tab.col_index, 'a')
     
   def testTableInitSingleColEmpty(self):
@@ -202,8 +199,8 @@ class TestTable(unittest.TestCase):
     
     '''
     tab = Table(['x'], 'f')
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 0)
     self.CompareColNames(tab, ['x'])
     self.CompareColTypes(tab, 'x', 'f')
     
@@ -216,8 +213,8 @@ class TestTable(unittest.TestCase):
     
     '''
     tab = Table(['x','y','z','a'], 'sfbi')
-    self.CompareColcount(tab, 4)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 4)
+    self.compare_row_count(tab, 0)
     self.CompareColNames(tab, ['x','y','z','a'])
     self.CompareColTypes(tab, ['x','y','z','a'], 'sfbi')
     self.CompareColTypes(tab, ['x','y','z','a'], ['string','float','bool','int'])
@@ -232,8 +229,8 @@ class TestTable(unittest.TestCase):
 
     '''
     tab = Table(['x'], 'f', x=5)
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 1)
     self.CompareColNames(tab, ['x'])
     self.CompareColTypes(tab, 'x', 'f')
     
@@ -247,8 +244,8 @@ class TestTable(unittest.TestCase):
     
     '''
     tab = Table(['x','a','z'], 'fbf', x=5, z=1.425, a=False)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 1)
     self.CompareColNames(tab, ['x','a','z'])
     self.CompareColTypes(tab, ['z','x','a'], 'ffb')
     self.CompareDataFromDict(tab, {'x': [5], 'z': [1.425], 'a': [False]})
@@ -262,8 +259,8 @@ class TestTable(unittest.TestCase):
       5.000 NA   NA 
     '''
     tab = Table(['x','a1','zzz'], 'fbf', x=5)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 1)
     self.CompareColNames(tab, ['x','a1','zzz'])
     self.CompareColTypes(tab, ['zzz','x','a1'], 'ffb')
     self.CompareDataFromDict(tab, {'x': [5], 'zzz': [None], 'a1': [None]})
@@ -282,8 +279,8 @@ class TestTable(unittest.TestCase):
 
     '''
     tab = Table(['x'], 'f', x=range(5))
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 5)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 5)
     self.CompareColNames(tab, ['x'])
     self.CompareColTypes(tab, 'x', 'f')
     
@@ -319,8 +316,8 @@ class TestTable(unittest.TestCase):
     '''
     
     tab = Table(['foo', 'bar'], 'si', bar=range(10,14), foo=['i','love','unit','tests'])
-    self.CompareColcount(tab, 2)
-    self.CompareRowcount(tab, 4)
+    self.compare_col_count(tab, 2)
+    self.compare_row_count(tab, 4)
     self.CompareColNames(tab, ['foo','bar'])
     self.CompareColTypes(tab, ['foo', 'bar'], 'si')
     self.CompareDataFromDict(tab, {'bar': [10,11,12,13], 'foo': ['i','love','unit','tests']})
@@ -347,8 +344,8 @@ class TestTable(unittest.TestCase):
 
     '''
     tab = Table(['foo', 'bar'], 'si', foo=['i','love','unit','tests'])
-    self.CompareColcount(tab, 2)
-    self.CompareRowcount(tab, 4)
+    self.compare_col_count(tab, 2)
+    self.compare_row_count(tab, 4)
     self.CompareColNames(tab, ['foo','bar'])
     self.CompareColTypes(tab, ['foo', 'bar'], 'si')
     self.CompareDataFromDict(tab, {'bar': [None,None,None,None], 'foo': ['i','love','unit','tests']})
@@ -362,11 +359,11 @@ class TestTable(unittest.TestCase):
     
     '''
     tab = Table()
-    self.CompareColcount(tab, 0)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 0)
+    self.compare_row_count(tab, 0)
     tab.add_col('first', 'string')
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 0)
     self.CompareColNames(tab, ['first'])
     self.CompareColTypes(tab, 'first', 's')
     
@@ -379,11 +376,11 @@ class TestTable(unittest.TestCase):
           2
     '''
     tab = Table(['first'],'i')
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 0)
     tab.add_row([2], overwrite=None)
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 1)
     self.CompareColNames(tab, ['first'])
     self.CompareColTypes(tab, 'first', 'i')
     self.CompareDataFromDict(tab, {'first': [2]})
@@ -398,11 +395,11 @@ class TestTable(unittest.TestCase):
     '''
     tab = Table()
     tab.add_col('first', 'int')
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 0)
     tab.add_row([2], overwrite=None)
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 1)
     self.CompareColNames(tab, ['first'])
     self.CompareColTypes(tab, 'first', 'i')
     self.CompareDataFromDict(tab, {'first': [2]})
@@ -417,15 +414,15 @@ class TestTable(unittest.TestCase):
 
     '''
     tab = Table(['first','second'],'si')
-    self.CompareColcount(tab, 2)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 2)
+    self.compare_row_count(tab, 0)
     self.CompareColTypes(tab, ['first','second'], 'si')
     tab.add_row(['x',3], overwrite=None)
-    self.CompareColcount(tab, 2)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 2)
+    self.compare_row_count(tab, 1)
     tab.add_col('third', 'float', 3.141)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 1)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 1)
     self.CompareColTypes(tab, ['first','third','second'], 'sfi')
     self.CompareDataFromDict(tab, {'second': [3], 'first': ['x'], 'third': [3.141]})
     
@@ -444,14 +441,14 @@ class TestTable(unittest.TestCase):
     tab.add_col('first', 'string')
     tab.add_col('second', 'int')
     tab.add_col('third', 'float')
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 0)
     self.CompareColTypes(tab, ['first','second', 'third'], 'sif')
     tab.add_row(['x',3, 1.0], overwrite=None)
     tab.add_row(['foo',6, 2.2], overwrite=None)
     tab.add_row(['bar',9, 3.3], overwrite=None)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 3)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 3)
     self.CompareDataFromDict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'third': [1,2.2,3.3]})
 
   def testTableAddMultiColMultiRowFromDict(self):
@@ -469,14 +466,14 @@ class TestTable(unittest.TestCase):
     tab.add_col('first', 'string')
     tab.add_col('second', 'int')
     tab.add_col('aaa', 'float')
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 0)
     self.CompareColTypes(tab, ['first','second', 'aaa'], 'sif')
     tab.add_row({'first':'x','second':3, 'aaa':1.0}, overwrite=None)
     tab.add_row({'aaa':2.2, 'second':6, 'first':'foo'}, overwrite=None)
     tab.add_row({'second':9, 'aaa':3.3, 'first':'bar'}, overwrite=None)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 3)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 3)
     self.CompareDataFromDict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'aaa': [1,2.2,3.3]})
     
   def testTableAddMultiRowMultiCol(self):
@@ -493,16 +490,16 @@ class TestTable(unittest.TestCase):
     '''
     tab = Table()
     tab.add_col('first', 'string')
-    self.CompareColcount(tab, 1)
-    self.CompareRowcount(tab, 0)
+    self.compare_col_count(tab, 1)
+    self.compare_row_count(tab, 0)
     self.CompareColTypes(tab, ['first'], 's')
     tab.add_row(['x'], overwrite=None)
     tab.add_row(['foo'], overwrite=None)
     tab.add_row(['bar'], overwrite=None)
     tab.add_col('second', 'int')
     tab.add_col('third', 'float', 3.141)
-    self.CompareColcount(tab, 3)
-    self.CompareRowcount(tab, 3)
+    self.compare_col_count(tab, 3)
+    self.compare_row_count(tab, 3)
     self.CompareDataFromDict(tab, {'second': [None,None,None],
                                    'first': ['x','foo','bar'],
                                    'third': [3.141, 3.141, 3.141]})

@@ -681,5 +681,56 @@ def plot_hexbin(self, x, y, title=None, x_title=None, y_title=None, x_range=None
 
   return plt
 
+def plot_roc(self, score_col, class_col, score_dir='-',
+            class_dir='-', class_cutoff=2.0,
+            style='-', title=None, x_title=None, y_title=None,
+            clear=True, save=None):
+  '''
+  Plot an ROC curve using matplotlib.
+  
+  For more information about parameters of the ROC, see
+  :meth:`compute_roc`, and for plotting see :meth:`Plot`.
+
+  :warning: The function depends on *matplotlib*
+  '''
+
+  try:
+    import matplotlib.pyplot as plt
+
+    roc = self.compute_roc(score_col, class_col, score_dir,
+                                  class_dir, class_cutoff)
+    
+    if not roc:
+      return None
+
+    enrx, enry = roc
+
+    if not title:
+      title = 'ROC of %s'%score_col
+
+    if not x_title:
+      x_title = 'false positive rate'
+
+    if not y_title:
+      y_title = 'true positive rate'
+
+    if clear:
+      plt.clf()
+
+    plt.plot(enrx, enry, style)
+
+    plt.title(title, size='x-large', fontweight='bold')
+    plt.ylabel(y_title, size='x-large')
+    plt.xlabel(x_title, size='x-large')
+
+    if save:
+      plt.savefig(save)
+
+    return plt
+  except ImportError:
+    print "Function needs matplotlib, but I could not import it."
+    raise
+    
 EXT = Extension('plotting', plot_enrichment,
-                plot, plot_histogram, plot_bar, plot_hexbin)
+                plot, plot_histogram, plot_bar, plot_hexbin,
+                plot_roc)

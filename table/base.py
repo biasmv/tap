@@ -1045,11 +1045,8 @@ Statistics for column %(col)s
     col_type = self.col_types[idx]
     if col_type!='int' and col_type!='float' and col_type!='bool':
       raise TypeError("sum can only be used on numeric column types")
-    s = 0.0
-    for r in self.rows:
-      if r[idx]!=None:
-        s += r[idx] 
-    return s 
+
+    return sum([x for x in self[col] if x!=None])
 
   def mean(self, col):
     """
@@ -1853,56 +1850,6 @@ Statistics for column %(col)s
       print "Function needs numpy, but I could not import it."
       raise
 
-  def plot_roc(self, score_col, class_col, score_dir='-',
-              class_dir='-', class_cutoff=2.0,
-              style='-', title=None, x_title=None, y_title=None,
-              clear=True, save=None):
-    '''
-    Plot an ROC curve using matplotlib.
-    
-    For more information about parameters of the ROC, see
-    :meth:`compute_roc`, and for plotting see :meth:`Plot`.
-
-    :warning: The function depends on *matplotlib*
-    '''
-
-    try:
-      import matplotlib.pyplot as plt
-
-      roc = self.compute_roc(score_col, class_col, score_dir,
-                                   class_dir, class_cutoff)
-      
-      if not roc:
-        return None
-
-      enrx, enry = roc
-
-      if not title:
-        title = 'ROC of %s'%score_col
-
-      if not x_title:
-        x_title = 'false positive rate'
-
-      if not y_title:
-        y_title = 'true positive rate'
-
-      if clear:
-        plt.clf()
-
-      plt.plot(enrx, enry, style)
-
-      plt.title(title, size='x-large', fontweight='bold')
-      plt.ylabel(y_title, size='x-large')
-      plt.xlabel(x_title, size='x-large')
-
-      if save:
-        plt.savefig(save)
-
-      return plt
-    except ImportError:
-      print "Function needs matplotlib, but I could not import it."
-      raise
-    
   def compute_mcc(self, score_col, class_col, score_dir='-',
                  class_dir='-', score_cutoff=2.0, class_cutoff=2.0):
     '''

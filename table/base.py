@@ -221,7 +221,7 @@ class Table(object):
     '''
     self.name = name
     
-  def GetName(self):
+  def get_name(self):
     '''
     Get name of table
     '''
@@ -907,7 +907,16 @@ Statistics for column %(col)s
     """
     return zip(*[self[arg] for arg in args])
 
- 
+
+  def zip_non_null(self, *args):
+    """
+    Same as :meth:`zip`, but only returns rows where none of the values 
+    is None.
+    """
+    for vals in self.zip(*args):
+      if None not in vals:
+        yield vals
+
   def _max(self, col):
     if len(self.rows)==0:
       return None, None
@@ -1272,10 +1281,9 @@ Statistics for column %(col)s
       col1 = self.col_index(col1)
       col2 = self.col_index(col2)
     vals1, vals2=([],[])
-    for v1, v2 in zip(self[col1], self[col2]):
-      if v1!=None and v2!=None:
-        vals1.append(v1)
-        vals2.append(v2)
+    for v1, v2 in self.zip_non_null(col1, col2):
+      vals1.append(v1)
+      vals2.append(v2)
     try:
       return correl(vals1, vals2)
     except Exception, e:
@@ -1304,10 +1312,9 @@ Statistics for column %(col)s
         col1 = self.col_index(col1)
         col2 = self.col_index(col2)
       vals1, vals2=([],[])
-      for v1, v2 in zip(self[col1], self[col2]):
-        if v1!=None and v2!=None:
-          vals1.append(v1)
-          vals2.append(v2)
+      for v1, v2 in self.zip_non_null(col1, col2):
+        vals1.append(v1)
+        vals2.append(v2)
       try:
         correl = scipy.stats.mstats.spearmanr(vals1, vals2)[0]
         if scipy.isnan(correl):

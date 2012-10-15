@@ -1067,10 +1067,8 @@ Statistics for column %(col)s
     if col_type!='int' and col_type!='float' and col_type!='bool':
       raise TypeError("mean can only be used on numeric or bool column types")
     
-    vals=[]
-    for v in self[col]:
-      if v!=None:
-        vals.append(v)
+    vals = [v for v in self[col] if v!=None]
+
     try:
       return mean(vals)
     except Exception, e:
@@ -1206,10 +1204,7 @@ Statistics for column %(col)s
     if col_type!='int' and col_type!='float' and col_type!='bool':
       raise TypeError("median can only be used on numeric column types")
     
-    vals=[]
-    for v in self[col]:
-      if v!=None:
-        vals.append(v)
+    vals=[v for v in self[col] if v!=None]
     try:
       return median(vals)
     except:

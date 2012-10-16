@@ -65,11 +65,11 @@ class TestReader(helper.TableTestCase):
     tab = load(os.path.join('tests/data','ost-table-notype.tab'))
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     
-  def testloadOSTDifficultHeaders(self):
+  def test_loads_difficult_headers(self):
     tab = load(os.path.join('tests/data','ost-table-difficult-headers.tab'))
     self.assertEquals(tab.col_types, ['float','float','float','float','float'])
 
-  def testsaveloadTableOST(self):
+  def test_saves_and_loads_ost_tables(self):
     tab = fixtures.create_test_table()
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     
@@ -95,7 +95,7 @@ class TestReader(helper.TableTestCase):
     in_stream = open(os.path.join('tests/data','emptytable.csv'), 'r')
     self.assertRaises(IOError, load, in_stream)
     
-  def testsaveloadTableOSTWithSpaces(self):
+  def test_save_escapes_whitespaces(self):
     tab = fixtures.create_test_table()
     tab.add_row(['hello spaces',10, 10.1], overwrite=None)
     self.compare_data_from_dict(tab, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
@@ -106,13 +106,13 @@ class TestReader(helper.TableTestCase):
     # read from disc
     tab_loaded_fname = load('saveloadtable_withspaces_filename_out.tab')
     self.compare_data_from_dict(tab_loaded_fname, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
-  def testsaveTableHTML(self):
+  def test_saves_html_files(self):
     import StringIO
     tab = fixtures.create_test_table()
     stream = StringIO.StringIO()
     tab.save(stream, format='html')
     self.assertEqual(stream.getvalue(), '<table><tr><th>first</th><th>second</th><th>third</th></tr><tr><td>x</td><td>3</td><td></td></tr><tr><td>foo</td><td></td><td>2.200</td></tr><tr><td></td><td>9</td><td>3.300</td></tr></table>')
-  def testsaveTableContext(self):
+  def test_saves_context_files(self):
     import StringIO
     tab = fixtures.create_test_table()
     stream = StringIO.StringIO()
@@ -120,7 +120,7 @@ class TestReader(helper.TableTestCase):
     self.assertEqual(stream.getvalue(), 
                      '\\starttable[l|r|i3r|]\n\\HL\n\\NC \\bf first\\NC \\bf second\\NC \\bf third \\AR\\HL\n\\NC x\\NC 3\\NC --- \\AR\n\\NC foo\NC ---\NC 2.200 \\AR\n\\NC ---\\NC 9\\NC 3.300 \\AR\n\\HL\n\\stoptable')
 
-  def testsaveloadTableCSV(self):
+  def test_saves_and_loads_csv_files(self):
     tab = fixtures.create_test_table()
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
 
@@ -140,7 +140,7 @@ class TestReader(helper.TableTestCase):
     self.compare_data_from_dict(tab_loaded_stream, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     self.compare_data_from_dict(tab_loaded_fname, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
   
-  def testsaveloadTablePickle(self):
+  def test_saves_and_loads_pickled_tables(self):
     tab = fixtures.create_test_table()
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     # write to disc

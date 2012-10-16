@@ -40,102 +40,9 @@ except ImportError:
 
 from table import *
 import fixtures
-class TestTable(unittest.TestCase):
+import helper
 
-  def tearDown(self):
-    for filename in glob.glob('*_out.*'):
-      os.remove(filename)
-
-  def compare_row_count(self, t, row_count):
-    '''
-    Compare the number of rows
-    '''
-    self.assertEqual(len(t.rows),
-                      row_count,
-                      "row count (%i) different from expected value (%i)" \
-                      %(len(t.rows), row_count))
-
-  def compare_col_count(self, t, col_count):
-    '''
-    Compare the number of columns
-    '''
-    self.assertEqual(len(t.col_names),
-                      col_count,
-                      "column count (%i) different from expected value (%i)" \
-                      %(len(t.col_names), col_count))
-
-  def CompareColNames(self, t, col_names):
-    '''
-    Compare all column names of the table with a list of reference col names
-    '''
-    self.compare_col_count(t, len(col_names))
-    for i, (col_name, ref_name) in enumerate(zip(t.col_names, col_names)):
-        self.assertEqual(col_name,
-                          ref_name,
-                          "column name (%s) different from expected name (%s) at col %i" \
-                          %(col_name, ref_name, i))
-
-  def CompareDataFromDict(self, t, data_dict):
-    '''
-    Compare all values of a table with reference values given in the form of a
-    dictionary containing a list of values for each column.
-    '''
-    self.compare_col_count(t, len(data_dict))
-    for k, v in data_dict.iteritems():
-      self.CompareDataForCol(t, k, v)
-      
-  def CompareDataForCol(self, t, col_name, ref_data):
-    '''
-    Compare the values of each row of ONE column specified by its name with
-    the reference values specified as a list of values for this column.
-    '''
-    self.compare_row_count(t, len(ref_data))
-    idx = t.col_index(col_name)
-    col_type = t.col_types[idx]
-    for i, (row, ref) in enumerate(zip(t.rows, ref_data)):
-      if (isinstance(ref, float) or isinstance(ref, int)) and (isinstance(row[idx], float) or isinstance(row[idx], int)):
-        self.assertAlmostEqual(row[idx],
-                                ref,
-                                msg="data (%s) in col (%s), row (%i) different from expected value (%s)" \
-                                %(row[idx], col_name, i, ref))
-      else:
-        self.assertEqual(row[idx],
-                          ref,
-                          "data (%s) in col (%s), row (%i) different from expected value (%s)" \
-                          %(row[idx], col_name, i, ref))
-
-  def CompareColTypes(self, t, col_names, ref_types):
-    '''
-    Compare the types of n columns specified by their names with reference
-    values specified either as a string consisting of the short type names 
-    (e.g 'sfb') or a list of strings consisting of the long type names
-    (e.g. ['string','float','bool'])
-    '''
-    if type(ref_types)==str:
-      trans = {'s' : 'string', 'i': 'int', 'b' : 'bool', 'f' : 'float'}
-      ref_types = [trans[rt] for rt in ref_types]
-    if type(col_names)==str:
-      col_names = [col_names]
-    self.assertEqual(len(col_names),
-                      len(ref_types),
-                      "number of col names (%i) different from number of reference col types (%i)" \
-                      %(len(col_names), len(ref_types)))
-    idxs = [t.col_index(x) for x in col_names]
-    for idx, ref_type in zip(idxs, ref_types):
-      self.assertEqual(t.col_types[idx],
-                        ref_type,
-                        "column type (%s) at column %i, different from reference col type (%s)" \
-                        %(t.col_types[idx], idx, ref_type))
-
-  def CompareImages(self, img1, img2):
-    '''
-    Compares two images based on all pixel values. This function needs the
-    python imaging library (PIL) package.
-    '''
-    if not HAS_PIL:
-      return
-    diff = ImageChops.difference(img1, img2)
-    self.assertEqual(diff.getbbox(),None)
+class TestTableBase(helper.TableTestCase):
 
   def testAllowsTosearch_col_names(self):
     tab = fixtures.create_test_table()
@@ -201,8 +108,8 @@ class TestTable(unittest.TestCase):
     tab = Table(['x'], 'f')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
-    self.CompareColNames(tab, ['x'])
-    self.CompareColTypes(tab, 'x', 'f')
+    self.compare_col_names(tab, ['x'])
+    self.compare_col_types(tab, 'x', 'f')
     
   def testTableInitMultiColEmpty(self):
     '''
@@ -215,9 +122,9 @@ class TestTable(unittest.TestCase):
     tab = Table(['x','y','z','a'], 'sfbi')
     self.compare_col_count(tab, 4)
     self.compare_row_count(tab, 0)
-    self.CompareColNames(tab, ['x','y','z','a'])
-    self.CompareColTypes(tab, ['x','y','z','a'], 'sfbi')
-    self.CompareColTypes(tab, ['x','y','z','a'], ['string','float','bool','int'])
+    self.compare_col_names(tab, ['x','y','z','a'])
+    self.compare_col_types(tab, ['x','y','z','a'], 'sfbi')
+    self.compare_col_types(tab, ['x','y','z','a'], ['string','float','bool','int'])
       
   def testTableInitSingleColSingleValueNonEmpty(self):
     '''
@@ -231,8 +138,8 @@ class TestTable(unittest.TestCase):
     tab = Table(['x'], 'f', x=5)
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 1)
-    self.CompareColNames(tab, ['x'])
-    self.CompareColTypes(tab, 'x', 'f')
+    self.compare_col_names(tab, ['x'])
+    self.compare_col_types(tab, 'x', 'f')
     
   def testTableInitMultiColSingleValueNonEmpty(self):
     '''
@@ -246,9 +153,9 @@ class TestTable(unittest.TestCase):
     tab = Table(['x','a','z'], 'fbf', x=5, z=1.425, a=False)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 1)
-    self.CompareColNames(tab, ['x','a','z'])
-    self.CompareColTypes(tab, ['z','x','a'], 'ffb')
-    self.CompareDataFromDict(tab, {'x': [5], 'z': [1.425], 'a': [False]})
+    self.compare_col_names(tab, ['x','a','z'])
+    self.compare_col_types(tab, ['z','x','a'], 'ffb')
+    self.compare_data_from_dict(tab, {'x': [5], 'z': [1.425], 'a': [False]})
     
   def testTableInitMultiColSingleValueAndNoneNonEmpty(self):
     '''
@@ -261,9 +168,9 @@ class TestTable(unittest.TestCase):
     tab = Table(['x','a1','zzz'], 'fbf', x=5)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 1)
-    self.CompareColNames(tab, ['x','a1','zzz'])
-    self.CompareColTypes(tab, ['zzz','x','a1'], 'ffb')
-    self.CompareDataFromDict(tab, {'x': [5], 'zzz': [None], 'a1': [None]})
+    self.compare_col_names(tab, ['x','a1','zzz'])
+    self.compare_col_types(tab, ['zzz','x','a1'], 'ffb')
+    self.compare_data_from_dict(tab, {'x': [5], 'zzz': [None], 'a1': [None]})
   
   def testTableInitSingleColMultiValueNonEmpty(self):
     '''
@@ -281,8 +188,8 @@ class TestTable(unittest.TestCase):
     tab = Table(['x'], 'f', x=range(5))
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 5)
-    self.CompareColNames(tab, ['x'])
-    self.CompareColTypes(tab, 'x', 'f')
+    self.compare_col_names(tab, ['x'])
+    self.compare_col_types(tab, 'x', 'f')
     
   def testTablefilterColNamesTypes(self):
     """
@@ -318,9 +225,9 @@ class TestTable(unittest.TestCase):
     tab = Table(['foo', 'bar'], 'si', bar=range(10,14), foo=['i','love','unit','tests'])
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 4)
-    self.CompareColNames(tab, ['foo','bar'])
-    self.CompareColTypes(tab, ['foo', 'bar'], 'si')
-    self.CompareDataFromDict(tab, {'bar': [10,11,12,13], 'foo': ['i','love','unit','tests']})
+    self.compare_col_names(tab, ['foo','bar'])
+    self.compare_col_types(tab, ['foo', 'bar'], 'si')
+    self.compare_data_from_dict(tab, {'bar': [10,11,12,13], 'foo': ['i','love','unit','tests']})
     
   def testTableInitMultiColMissingMultiValue(self):
     '''
@@ -346,9 +253,9 @@ class TestTable(unittest.TestCase):
     tab = Table(['foo', 'bar'], 'si', foo=['i','love','unit','tests'])
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 4)
-    self.CompareColNames(tab, ['foo','bar'])
-    self.CompareColTypes(tab, ['foo', 'bar'], 'si')
-    self.CompareDataFromDict(tab, {'bar': [None,None,None,None], 'foo': ['i','love','unit','tests']})
+    self.compare_col_names(tab, ['foo','bar'])
+    self.compare_col_types(tab, ['foo', 'bar'], 'si')
+    self.compare_data_from_dict(tab, {'bar': [None,None,None,None], 'foo': ['i','love','unit','tests']})
   
   def testTableAddSingleCol(self):
     '''
@@ -364,8 +271,8 @@ class TestTable(unittest.TestCase):
     tab.add_col('first', 'string')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
-    self.CompareColNames(tab, ['first'])
-    self.CompareColTypes(tab, 'first', 's')
+    self.compare_col_names(tab, ['first'])
+    self.compare_col_types(tab, 'first', 's')
     
   def testTableAddSingleRow(self):
     '''
@@ -381,9 +288,9 @@ class TestTable(unittest.TestCase):
     tab.add_row([2], overwrite=None)
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 1)
-    self.CompareColNames(tab, ['first'])
-    self.CompareColTypes(tab, 'first', 'i')
-    self.CompareDataFromDict(tab, {'first': [2]})
+    self.compare_col_names(tab, ['first'])
+    self.compare_col_types(tab, 'first', 'i')
+    self.compare_data_from_dict(tab, {'first': [2]})
     
   def testTableAddSingleColSingleRow(self):
     '''
@@ -400,9 +307,9 @@ class TestTable(unittest.TestCase):
     tab.add_row([2], overwrite=None)
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 1)
-    self.CompareColNames(tab, ['first'])
-    self.CompareColTypes(tab, 'first', 'i')
-    self.CompareDataFromDict(tab, {'first': [2]})
+    self.compare_col_names(tab, ['first'])
+    self.compare_col_types(tab, 'first', 'i')
+    self.compare_data_from_dict(tab, {'first': [2]})
   
   def testTableAddSingleColWithRow(self):
     '''
@@ -416,15 +323,15 @@ class TestTable(unittest.TestCase):
     tab = Table(['first','second'],'si')
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 0)
-    self.CompareColTypes(tab, ['first','second'], 'si')
+    self.compare_col_types(tab, ['first','second'], 'si')
     tab.add_row(['x',3], overwrite=None)
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 1)
     tab.add_col('third', 'float', 3.141)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 1)
-    self.CompareColTypes(tab, ['first','third','second'], 'sfi')
-    self.CompareDataFromDict(tab, {'second': [3], 'first': ['x'], 'third': [3.141]})
+    self.compare_col_types(tab, ['first','third','second'], 'sfi')
+    self.compare_data_from_dict(tab, {'second': [3], 'first': ['x'], 'third': [3.141]})
     
   def testTableAddMultiColMultiRow(self):
     '''
@@ -443,13 +350,13 @@ class TestTable(unittest.TestCase):
     tab.add_col('third', 'float')
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 0)
-    self.CompareColTypes(tab, ['first','second', 'third'], 'sif')
+    self.compare_col_types(tab, ['first','second', 'third'], 'sif')
     tab.add_row(['x',3, 1.0], overwrite=None)
     tab.add_row(['foo',6, 2.2], overwrite=None)
     tab.add_row(['bar',9, 3.3], overwrite=None)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 3)
-    self.CompareDataFromDict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'third': [1,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'third': [1,2.2,3.3]})
 
   def testTableAddMultiColMultiRowFromDict(self):
     '''
@@ -468,13 +375,13 @@ class TestTable(unittest.TestCase):
     tab.add_col('aaa', 'float')
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 0)
-    self.CompareColTypes(tab, ['first','second', 'aaa'], 'sif')
+    self.compare_col_types(tab, ['first','second', 'aaa'], 'sif')
     tab.add_row({'first':'x','second':3, 'aaa':1.0}, overwrite=None)
     tab.add_row({'aaa':2.2, 'second':6, 'first':'foo'}, overwrite=None)
     tab.add_row({'second':9, 'aaa':3.3, 'first':'bar'}, overwrite=None)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 3)
-    self.CompareDataFromDict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'aaa': [1,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'aaa': [1,2.2,3.3]})
     
   def testTableAddMultiRowMultiCol(self):
     '''
@@ -492,7 +399,7 @@ class TestTable(unittest.TestCase):
     tab.add_col('first', 'string')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
-    self.CompareColTypes(tab, ['first'], 's')
+    self.compare_col_types(tab, ['first'], 's')
     tab.add_row(['x'], overwrite=None)
     tab.add_row(['foo'], overwrite=None)
     tab.add_row(['bar'], overwrite=None)
@@ -500,7 +407,7 @@ class TestTable(unittest.TestCase):
     tab.add_col('third', 'float', 3.141)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 3)
-    self.CompareDataFromDict(tab, {'second': [None,None,None],
+    self.compare_data_from_dict(tab, {'second': [None,None,None],
                                    'first': ['x','foo','bar'],
                                    'third': [3.141, 3.141, 3.141]})
 
@@ -508,13 +415,13 @@ class TestTable(unittest.TestCase):
     tab = Table(['x','y','z'], 'fff')
     data = {'x': [1.2, 1.5], 'z': [1.6, 2.4]}
     tab.add_row(data)
-    self.CompareDataFromDict(tab, {'x': [1.2, 1.5],
+    self.compare_data_from_dict(tab, {'x': [1.2, 1.5],
                                    'y': [None, None],
                                    'z': [1.6, 2.4]})
 
     data = {'y': [5.1, 3.4, 1.5]}
     tab.add_row(data)
-    self.CompareDataFromDict(tab, {'x': [1.2, 1.5, None, None, None],
+    self.compare_data_from_dict(tab, {'x': [1.2, 1.5, None, None, None],
                                    'y': [None, None, 5.1, 3.4, 1.5],
                                    'z': [1.6, 2.4, None, None, None]})
 
@@ -529,7 +436,7 @@ class TestTable(unittest.TestCase):
     # overwrite certain rows
     data = {'x': [1.2, 1.9], 'z': [7.9, 3.5]}
     tab.add_row(data, overwrite='x')
-    self.CompareDataFromDict(tab, {'x': [1.2, 1.5, None, None, None, 1.9],
+    self.compare_data_from_dict(tab, {'x': [1.2, 1.5, None, None, None, 1.9],
                                    'y': [None, None, 5.1, 3.4, 1.5, None],
                                    'z': [7.9, 2.4, None, None, None, 3.5]})
 
@@ -551,11 +458,11 @@ class TestTable(unittest.TestCase):
     tab.add_row(['row1',True, 1])
     tab.add_row(['row2',None, 2])
     tab.add_row(['row3',False, None])
-    self.CompareDataFromDict(tab, {'x': ['row1', 'row2', 'row3'],
+    self.compare_data_from_dict(tab, {'x': ['row1', 'row2', 'row3'],
                                    'foo': [True, None, False],
                                    'bar': [1, 2, None]})
     tab.add_row({'x':'row3', 'bar':3}, overwrite='x')
-    self.CompareDataFromDict(tab, {'x': ['row1', 'row2', 'row3'],
+    self.compare_data_from_dict(tab, {'x': ['row1', 'row2', 'row3'],
                                    'foo': [True, None, False],
                                    'bar': [1, 2, 3]})
     
@@ -578,11 +485,11 @@ class TestTable(unittest.TestCase):
     tab.add_row(['row1',True, 1])
     tab.add_row(['row2',None, 2])
     tab.add_row(['row3',False, None])
-    self.CompareDataFromDict(tab, {'x': ['row1', 'row2', 'row3'],
+    self.compare_data_from_dict(tab, {'x': ['row1', 'row2', 'row3'],
                                    'foo': [True, None, False],
                                    'bar': [1, 2, None]})
     tab.add_row(['row3', True, 3], overwrite='x')
-    self.CompareDataFromDict(tab, {'x': ['row1', 'row2', 'row3'],
+    self.compare_data_from_dict(tab, {'x': ['row1', 'row2', 'row3'],
                                    'foo': [True, None, True],
                                    'bar': [1, 2, 3]})
 
@@ -653,37 +560,37 @@ class TestTable(unittest.TestCase):
   
   def testShortLongColumnTypes(self):
     tab = Table(['x','y','z','a'],['i','f','s','b'])
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],['int','float','string','bool'])
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],['i','float','s','bool'])
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],['i','fLOAT','S','bool'])
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],'ifsb')
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],'int,float,string,bool')
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],'int,f,s,bool')
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x','y','z','a'],'INT,F,s,bOOL')
-    self.CompareColTypes(tab, ['x','y','z','a'], 'ifsb')
+    self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
     tab = Table(['x'], 'boOl')
-    self.CompareColTypes(tab, ['x'], 'b')
+    self.compare_col_types(tab, ['x'], 'b')
     tab = Table(['x'], 'B')
-    self.CompareColTypes(tab, ['x'], 'b')
+    self.compare_col_types(tab, ['x'], 'b')
     tab = Table(['x'], ['b'])
-    self.CompareColTypes(tab, ['x'], 'b')
+    self.compare_col_types(tab, ['x'], 'b')
     tab = Table(['x'], ['Bool'])
-    self.CompareColTypes(tab, ['x'], 'b')
+    self.compare_col_types(tab, ['x'], 'b')
     
     self.assertRaises(ValueError, Table, ['x','y','z'], 'bfstring')
     self.assertRaises(ValueError, Table, ['x','y','z'], ['b,f,string'])
@@ -697,9 +604,9 @@ class TestTable(unittest.TestCase):
     
   def testremove_col(self):
     tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.remove_col("second")
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'third': [None,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'third': [None,2.2,3.3]})
     
     # raise error when column is unknown
     tab = fixtures.create_test_table()
@@ -707,161 +614,14 @@ class TestTable(unittest.TestCase):
     
   def testsortTable(self):
     tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.sort('first', '-')
-    self.CompareDataFromDict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
+    self.compare_data_from_dict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
     tab.sort('first', '+')
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.sort('third', '+')
-    self.CompareDataFromDict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
+    self.compare_data_from_dict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
 
-  def testGuessFormat(self):
-    self.assertEqual(Table._guess_format('table_test.csv'), 'csv')
-    self.assertEqual(Table._guess_format('table_test.pickle'), 'pickle')
-    self.assertEqual(Table._guess_format('table_test.tab'), 'ost')
-    self.assertEqual(Table._guess_format('table_test.ost'), 'ost')
-    self.assertEqual(Table._guess_format('table_test.xyz'), 'ost')
-    
-  def testsaveloadTableAutoFormat(self):   
-    tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-
-    # write to disc
-    tab.save("saveloadtable_filename_out.csv", format='csv')
-    tab.save("saveloadtable_filename_out.tab", format='ost')
-    tab.save("saveloadtable_filename_out.pickle", format='pickle')
-    
-    # read from disc: csv
-    in_stream_csv = open("saveloadtable_filename_out.csv", 'r')
-    tab_loaded_stream_csv = Table.load(in_stream_csv)
-    in_stream_csv.close()
-    tab_loaded_fname_csv = Table.load('saveloadtable_filename_out.csv')
-
-    # check content: csv
-    self.CompareDataFromDict(tab_loaded_stream_csv, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname_csv, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-  
-    # read from disc: pickle
-    in_stream_pickle = open("saveloadtable_filename_out.pickle", 'rb')
-    tab_loaded_stream_pickle = Table.load(in_stream_pickle)
-    in_stream_pickle.close()
-    tab_loaded_fname_pickle = Table.load('saveloadtable_filename_out.pickle')
-
-    # check content: pickle
-    self.CompareDataFromDict(tab_loaded_stream_pickle, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname_pickle, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-
-    # read from disc: ost
-    in_stream_ost = open("saveloadtable_filename_out.tab", 'rb')
-    tab_loaded_stream_ost = Table.load(in_stream_ost)
-    in_stream_ost.close()
-    tab_loaded_fname_ost = Table.load('saveloadtable_filename_out.tab')
-
-    # check content: ost
-    self.CompareDataFromDict(tab_loaded_stream_ost, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname_ost, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-  
-
-  def testloadTableOSTUnknownType(self):
-    self.assertRaises(ValueError, Table.load, os.path.join('tests/data','ost-table-unknown-type.tab'))
-
-  def testloadTableOSTNoType(self):
-    tab = Table.load(os.path.join('tests/data','ost-table-notype.tab'))
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    
-  def testloadOSTDifficultHeaders(self):
-    tab = Table.load(os.path.join('tests/data','ost-table-difficult-headers.tab'))
-    self.assertEquals(tab.col_types, ['float','float','float','float','float'])
-
-  def testsaveloadTableOST(self):
-    tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    
-    # write to disc
-    tab.save("saveloadtable_filename_out.tab")
-    out_stream = open("saveloadtable_stream_out.tab", 'w')
-    tab.save(out_stream)
-    out_stream.close()
-    
-    # read from disc
-    in_stream = open("saveloadtable_stream_out.tab", 'r')
-    tab_loaded_stream = Table.load(in_stream)
-    in_stream.close()
-    tab_loaded_fname = Table.load('saveloadtable_filename_out.tab')
-    
-    # check content
-    self.CompareDataFromDict(tab_loaded_stream, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    
-    # check Errors for empty/non existing files
-    self.assertRaises(IOError, Table.load, 'nonexisting.file')
-    self.assertRaises(IOError, Table.load, os.path.join('tests/data','emptytable.tab'))
-    in_stream = open(os.path.join('tests/data','emptytable.csv'), 'r')
-    self.assertRaises(IOError, Table.load, in_stream)
-    
-  def testsaveloadTableOSTWithSpaces(self):
-    tab = fixtures.create_test_table()
-    tab.add_row(['hello spaces',10, 10.1], overwrite=None)
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
-
-    # write to disc
-    tab.save("saveloadtable_withspaces_filename_out.tab")
-
-    # read from disc
-    tab_loaded_fname = Table.load('saveloadtable_withspaces_filename_out.tab')
-    self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None,'hello spaces'], 'second': [3,None,9,10], 'third': [None,2.2,3.3,10.1]})
-  def testsaveTableHTML(self):
-    import StringIO
-    tab = fixtures.create_test_table()
-    stream = StringIO.StringIO()
-    tab.save(stream, format='html')
-    self.assertEqual(stream.getvalue(), '<table><tr><th>first</th><th>second</th><th>third</th></tr><tr><td>x</td><td>3</td><td></td></tr><tr><td>foo</td><td></td><td>2.200</td></tr><tr><td></td><td>9</td><td>3.300</td></tr></table>')
-  def testsaveTableContext(self):
-    import StringIO
-    tab = fixtures.create_test_table()
-    stream = StringIO.StringIO()
-    tab.save(stream, format='context')
-    self.assertEqual(stream.getvalue(), 
-                     '\\starttable[l|r|i3r|]\n\\HL\n\\NC \\bf first\\NC \\bf second\\NC \\bf third \\AR\\HL\n\\NC x\\NC 3\\NC --- \\AR\n\\NC foo\NC ---\NC 2.200 \\AR\n\\NC ---\\NC 9\\NC 3.300 \\AR\n\\HL\n\\stoptable')
-
-  def testsaveloadTableCSV(self):
-    tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-
-    # write to disc
-    tab.save("saveloadtable_filename_out.csv", format='csv')
-    out_stream = open("saveloadtable_stream_out.csv", 'w')
-    tab.save(out_stream, format='csv')
-    out_stream.close()
-    
-    # read from disc
-    in_stream = open("saveloadtable_stream_out.csv", 'r')
-    tab_loaded_stream = Table.load(in_stream, format='csv')
-    in_stream.close()
-    tab_loaded_fname = Table.load('saveloadtable_filename_out.csv', format='csv')
-
-    # check content
-    self.CompareDataFromDict(tab_loaded_stream, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-  
-  def testsaveloadTablePickle(self):
-    tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    # write to disc
-    tab.save("saveloadtable_filename_out.pickle", format='pickle')
-    out_stream = open("saveloadtable_stream_out.pickle", 'wb')
-    tab.save(out_stream, format='pickle')
-    out_stream.close()
-
-    # read from disc
-    in_stream = open("saveloadtable_stream_out.pickle", 'rb')
-    tab_loaded_stream = Table.load(in_stream, format='pickle')
-    in_stream.close()
-    tab_loaded_fname = Table.load('saveloadtable_filename_out.pickle', format='pickle')
-
-    # check content
-    self.CompareDataFromDict(tab_loaded_stream, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
-    self.CompareDataFromDict(tab_loaded_fname, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
 
   def testmergeTable(self):
     '''
@@ -902,11 +662,11 @@ class TestTable(unittest.TestCase):
     
     tab_merged = merge(tab1, tab2, 'x', only_matching=False)
     tab_merged.sort('x', order='-')
-    self.CompareDataFromDict(tab_merged, {'x': [1,2,3,4], 'y': [10,15,20,None], 'u': [100,None,200,400]})
+    self.compare_data_from_dict(tab_merged, {'x': [1,2,3,4], 'y': [10,15,20,None], 'u': [100,None,200,400]})
     
     tab_merged = merge(tab1, tab2, 'x', only_matching=True)
     tab_merged.sort('x', order='-')
-    self.CompareDataFromDict(tab_merged, {'x': [1,3], 'y': [10,20], 'u': [100,200]})
+    self.compare_data_from_dict(tab_merged, {'x': [1,3], 'y': [10,20], 'u': [100,200]})
     
   def testfilterTable(self):
     tab = fixtures.create_test_table()
@@ -916,13 +676,13 @@ class TestTable(unittest.TestCase):
     
     # filter on one column
     tab_filtered = tab.filter(first='foo')
-    self.CompareDataFromDict(tab_filtered, {'first':['foo','foo','foo','foo'],
+    self.compare_data_from_dict(tab_filtered, {'first':['foo','foo','foo','foo'],
                                             'second':[None,1,0,1],
                                             'third':[2.2,5.15,1.0,12.0]})
     
     # filter on multiple columns
     tab_filtered = tab.filter(first='foo',second=1)
-    self.CompareDataFromDict(tab_filtered, {'first':['foo','foo'],
+    self.compare_data_from_dict(tab_filtered, {'first':['foo','foo'],
                                             'second':[1,1],
                                             'third':[5.15,12.0]})
     
@@ -1024,7 +784,7 @@ class TestTable(unittest.TestCase):
     
     self.assertRaises(TypeError, tab.row_mean, 'mean', ['first', 'second'])
     tab.row_mean('mean', ['third', 'second', 'fourth'])
-    self.CompareDataFromDict(tab, {'mean': [2,2.1,5.1,None],
+    self.compare_data_from_dict(tab, {'mean': [2,2.1,5.1,None],
                                    'first': ['x','foo',None,None],
                                    'second': [3,None,9,None],
                                    'third': [None,2.2,3.3,None],
@@ -1223,7 +983,7 @@ class TestTable(unittest.TestCase):
   def testCalcROCFromFile(self):
     if not HAS_NUMPY:
       return
-    tab = Table.load(os.path.join('tests/data','roc_table.dat'))
+    tab = load(os.path.join('tests/data','roc_table.dat'))
     auc = tab.compute_roc_auc(score_col='prediction', class_col='reference', class_cutoff=0.4)
     self.assertEquals(auc, 1.0)
       
@@ -1474,12 +1234,12 @@ class TestTable(unittest.TestCase):
     
     # simple extend of the same table
     tab = fixtures.create_test_table()
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None],
                                    'second': [3,None,9],
                                    'third': [None,2.2,3.3]})
     
     tab.extend(tab)
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None,'x','foo',None],
                                    'second': [3,None,9,3,None,9],
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
@@ -1487,10 +1247,10 @@ class TestTable(unittest.TestCase):
     tab = fixtures.create_test_table()
     tab2 = fixtures.create_test_table()
     tab.extend(tab2)
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None,'x','foo',None],
                                    'second': [3,None,9,3,None,9],
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
-    self.CompareDataFromDict(tab2, {'first': ['x','foo',None],
+    self.compare_data_from_dict(tab2, {'first': ['x','foo',None],
                                     'second': [3,None,9],
                                     'third': [None,2.2,3.3]})
     
@@ -1499,7 +1259,7 @@ class TestTable(unittest.TestCase):
     tab2 = fixtures.create_test_table()
     tab2.add_col('foo','i',[1,2,3])
     tab.extend(tab2)
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None,'x','foo',None],
                                    'second': [3,None,9,3,None,9],
                                    'third': [None,2.2,3.3,None,2.2,3.3],
                                    'foo': [None,None,None,1,2,3]})     
@@ -1511,11 +1271,11 @@ class TestTable(unittest.TestCase):
                   third=[None,2.2,3.3],
                   first=['x','foo',None],
                   second=[3, None, 9])
-    self.CompareDataFromDict(tab2, {'first': ['x','foo',None],
+    self.compare_data_from_dict(tab2, {'first': ['x','foo',None],
                                     'second': [3,None,9],
                                     'third': [None,2.2,3.3]})
     tab.extend(tab2)
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None,'x','foo',None],
                                    'second': [3,None,9,3,None,9],
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
@@ -1524,7 +1284,7 @@ class TestTable(unittest.TestCase):
     tab2 = fixtures.create_test_table()
     tab2.add_col('foo','i',[1,2,3])
     tab.extend(tab2, overwrite='first')
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None],
                                    'second': [3,None,9],
                                    'third': [None,2.2,3.3],
                                    'foo': [1,2,3]})
@@ -1537,7 +1297,7 @@ class TestTable(unittest.TestCase):
                   first=['a','bar','bla'],
                   second=[3, None, 9])
     tab.extend(tab2, overwrite='first')
-    self.CompareDataFromDict(tab, {'first': ['x','foo',None,'a','bar','bla'],
+    self.compare_data_from_dict(tab, {'first': ['x','foo',None,'a','bar','bla'],
                                    'second': [3,None,9,3,None,9],
                                    'third': [None,2.2,3.3,None,2.2,3.3]})
     
@@ -1549,7 +1309,7 @@ class TestTable(unittest.TestCase):
                   first=['a','bar','bla'],
                   second=[3, None, 9])
     tab.extend(tab2, overwrite='third')
-    self.CompareDataFromDict(tab, {'first': ['a','bar',None,'bla'],
+    self.compare_data_from_dict(tab, {'first': ['a','bar',None,'bla'],
                                    'second': [3,None,9,9],
                                    'third': [None,2.2,3.3,3.4]})
     

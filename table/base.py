@@ -293,7 +293,8 @@ class Table(object):
     for r, v in zip(self.rows, value):
       r[col_index]=v
 
-  def to_string(self, float_format='%.3f', int_format='%d', rows=None):
+  def to_string(self, float_format='%.3f', 
+                int_format='%d', rows=None):
     '''
     Convert the table into a string representation.
 
@@ -1235,6 +1236,7 @@ Statistics for column %(col)s
     stream.write('</table>')
     if file_opened:
       stream.close()
+
   def _save_context(self, stream_or_filename):
     file_opened = False
     if not hasattr(stream_or_filename, 'write'):
@@ -1474,7 +1476,7 @@ Statistics for column %(col)s
       raise
 
   def compute_enrichment(self, score_col, class_col, score_dir='-', 
-                        class_dir='-', class_cutoff=2.0):
+                         class_dir='-', class_cutoff=2.0):
     '''
     Computes the enrichment of column *score_col* classified according to
     *class_col*.
@@ -1554,7 +1556,7 @@ Statistics for column %(col)s
     return x,y
     
   def compute_enrichment_auc(self, score_col, class_col, score_dir='-', 
-                           class_dir='-', class_cutoff=2.0):
+                             class_dir='-', class_cutoff=2.0):
     '''
     Computes the area under the curve of the enrichment using the trapezoidal
     rule.

@@ -131,7 +131,7 @@ class Tab(object):
       if not col_names:
         self.col_names=[v for v in kwargs.keys()]
       if not self.col_types:
-        self.col_types=['string' for u in range(len(self.col_names))]
+        self.col_types=[typeutil.guess_array_type(kwargs.get(c, [None])) for c in self.col_names]
       if len(kwargs)>0:
         self._add_rows_from_dict(kwargs)
 

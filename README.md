@@ -5,21 +5,31 @@ tap grew out of the need of having an simple and unified interface to interact w
 
 # usage
 
+```python
 import tap
 
-tab = tap.Tab(name=['Anton', 'Moritz', 'Theo'],
+ages = tap.Tab(name=['Anton', 'Moritz', 'Theo'],
                age=[25,66,32]) 
-print tab
-
-tab.sort('age')
+ages.sort('age')
 print ages
+#  age   name  
+# -------------
+#  25    Anton  
+#  32    Theo
+#  66    Moritz   
 
-salaries = tab.Tab(name=['Anton', 'Moritz', 'Theo'],
+salaries = tap.Tab(name=['Anton', 'Moritz', 'Theo'],
                    salary=[100,200,150])
 
-merged = tap.merge(tab, salaries, by='name')
+merged = tap.merge(ages, salaries, by='name')
 
 print merged
+#  age   name   salary 
+#---------------------
+# 66    Moritz  200      
+# 32    Theo    150   
+# 25    Anton   100      
+```
 
 
 

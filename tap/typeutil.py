@@ -25,7 +25,7 @@ def is_scalar(value):
   except:
     return True
 
-def guess_col_type(iterable):
+def guess_array_type(iterable):
   '''
   guess column type for iterable
   '''

@@ -52,11 +52,11 @@ class TestTypeutil(unittest.TestCase):
     self.assertFalse(typeutil.is_string_like(3))
     self.assertFalse(typeutil.is_string_like(['a','b']))
 
-  def test_guess_col_type(self):
-    self.assertEqual(typeutil.guess_col_type(['1', '1.3', '2']), 'float')
-    self.assertEqual(typeutil.guess_col_type(['1', '1', '2']), 'int')
-    self.assertEqual(typeutil.guess_col_type(['NONE', '1', '1', '2']), 'int')
-    self.assertEqual(typeutil.guess_col_type(['NONE', '1', '1', '2']), 'int')
-    self.assertEqual(typeutil.guess_col_type(['NONE', '1', '1', 'a']), 'string')
-    self.assertEqual(typeutil.guess_col_type(['NONE', 'TRUE', 'False']), 'bool')
-    self.assertEqual(typeutil.guess_col_type(['NONE']), 'string')
+  def test_guess_array_type(self):
+    self.assertEqual(typeutil.guess_array_type(['1', '1.3', '2']), 'float')
+    self.assertEqual(typeutil.guess_array_type(['1', '1', '2']), 'int')
+    self.assertEqual(typeutil.guess_array_type(['NONE', '1', '1', '2']), 'int')
+    self.assertEqual(typeutil.guess_array_type(['NONE', '1', '1', '2']), 'int')
+    self.assertEqual(typeutil.guess_array_type(['NONE', '1', '1', 'a']), 'string')
+    self.assertEqual(typeutil.guess_array_type(['NONE', 'TRUE', 'False']), 'bool')
+    self.assertEqual(typeutil.guess_array_type(['NONE']), 'string')

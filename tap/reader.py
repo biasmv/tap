@@ -41,7 +41,7 @@ def _load_ost(stream_or_filename):
 
 def _coerce_col_types(table):
   for col_idx in range(len(table.col_names)):
-    table.col_types[col_idx]=typeutil.guess_col_type(table[table.col_names[col_idx]])
+    table.col_types[col_idx]=typeutil.guess_array_type(table[table.col_names[col_idx]])
   for row in table.rows:
     for idx in range(len(row)):
       row[idx]=typeutil.coerce(row[idx], table.col_types[idx])

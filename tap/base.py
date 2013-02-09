@@ -1859,6 +1859,8 @@ def merge(table1, table2, by, only_matching=False):
     4  400
   ==== ====
 
+  when merged by column x, it produces the following output:
+
   ===== ===== =====
   x      y     u
   ===== ===== =====
@@ -1868,7 +1870,6 @@ def merge(table1, table2, by, only_matching=False):
   4      None  400
   ===== ===== =====
   
-  when merged by column x, produce the following output:
   """
   def _key(row, indices):
     return tuple([row[i] for i in indices])

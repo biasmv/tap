@@ -54,13 +54,90 @@ def plot_enrichment(self, score_col, class_col, score_dir='-',
     plt.savefig(save)
   
   return plt
-  
+
+class PlotData:
+  def __init__(self, tab, x, y, z, title=None, x_title=None, y_title=None, 
+               z_title=None, x_range=None, y_range=None, z_range=None, 
+               color=None):
+
+    self._tab = tab
+
+    self.x, self.y, self.z = (x, y, z)
+
+    self._title = title
+
+    self._x_title = x_title
+    self._y_title = y_title
+    self._z_title = z_title
+    self._color = color
+
+
+    for  r, n in ((x_range, 'x'), (y_range, 'y'), (z_range, 'z')):
+      if r and (typeutil.is_scalar(x_range) or len(x_range)!=2):
+        raise ValueError('%s_range must contain exactly two items' % n)
+
+    self._x_range, self._y_range, self._z_range = (x_range, y_range, z_range)
+
+  def _make_title(self, col_name, title):
+    if title!=None:
+      return title
+    if col_name==None:
+      return None
+    return col_name.replace('_', ' ')
+
+  @property
+  def title(self):
+    if self._title!=None:
+      return self._title
+    return 'xxx' 
+
+  def _data_range(self, explicit_range, col_name):
+    if explicit_range:
+      return explicit_range
+    return  (self._tab.min(col_name), self._tab.max(col_name))
+
+  @property
+  def x_range(self):
+    return self._data_range(self._x_range, self.x)
+
+  @property
+  def y_range(self):
+    return self._data_range(self._y_range, self.y)
+
+  @property
+  def z_range(self):
+    return self._data_range(self._z_range, self.z)
+
+  @property
+  def x_data(self):
+    pass
+
+  @property
+  def y_data(self):
+    pass
+
+  @property
+  def z_data(self):
+    pass
+
+  @property
+  def x_title(self):
+    return self._make_title(self.x, self._x_title)
+
+  @property
+  def y_title(self):
+    return self._make_title(self.y, self._y_title)
+
+  @property
+  def z_title(self):
+    return self._make_title(self.z, self._z_title)
+
+
 def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
          z_title=None, x_range=None, y_range=None, z_range=None,
-         color=None, plot_if=None, legend=None,
-         num_z_levels=10, z_contour=True, z_interpol='nn', diag_line=False,
-         labels=None, max_num_labels=None, title=None, clear=True, save=False,
-         **kwargs):
+         color=None, legend=None, num_z_levels=10, z_contour=True, 
+         z_interpol='nn', diag_line=False, labels=None, max_num_labels=None, 
+         title=None, clear=True, save=False, **kwargs):
   """
   Function to plot values from your table in 1, 2 or 3 dimensions using
   `Matplotlib <http://matplotlib.sourceforge.net>`__
@@ -102,10 +179,6 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
   :param color: color for data (e.g. *b*, *g*, *r*). For a complete list check
                 (`matplotlib docu <http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.plot>`__).
   :type color: :class:`str`
-
-  :param plot_if: callable which returnes *True* if row should be plotted. Is
-                  invoked like ``plot_if(self, row)``
-  :type plot_if: callable
 
   :param legend: legend label for data series
   :type legend: :class:`str`
@@ -176,50 +249,19 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
     zs = []
 
     if clear:
-      plt.figure(figsize=[8, 6])
+      plt.figure(figsize=[4, 4])
     
-    if x_title!=None:
-      nice_x=x_title
-    else:
-      nice_x=make_title(x)
+    pd = PlotData(self, x, y, z, x_title=x_title, y_title=y_title,
+                  z_title=z_title, x_range=x_range, y_range=y_range,
+                  z_range=z_range)
     
-    if y_title!=None:
-      nice_y=y_title
-    else:
-      if y:
-        nice_y=make_title(y)
-      else:
-        nice_y=None
-    
-    if z_title!=None:
-      nice_z = z_title
-    else:
-      if z:
-        nice_z = make_title(z)
-      else:
-        nice_z = None
-
-    if x_range and (typeutil.is_scalar(x_range) or len(x_range)!=2):
-      raise ValueError('parameter x_range must contain exactly two elements')
-    if y_range and (typeutil.is_scalar(y_range) or len(y_range)!=2):
-      raise ValueError('parameter y_range must contain exactly two elements')
-    if z_range and (typeutil.is_scalar(z_range) or len(z_range)!=2):
-      raise ValueError('parameter z_range must contain exactly two elements')
-
     if color:
-      kwargs['color']=color
+      kwargs['color'] = color
     if legend:
       kwargs['label']=legend
     if y and z:
-      idx3 = self.col_index(z)
-      idx2 = self.col_index(y)
-      for row in self.rows:
-        if row[idx1]!=None and row[idx2]!=None and row[idx3]!=None:
-          if plot_if and not plot_if(self, row):
-            continue
-          xs.append(row[idx1])
-          ys.append(row[idx2])
-          zs.append(row[idx3])
+      xs, ys, zs = zip(*self.zip_non_null(x, y, z))
+
       levels = []
       if z_range:
         z_spacing = (z_range[1] - z_range[0]) / num_z_levels
@@ -243,15 +285,8 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
       plt.colorbar(ticks=levels)
           
     elif y:
-      idx2=self.col_index(y)
-      for row in self.rows:
-        if row[idx1]!=None and row[idx2]!=None:
-          if plot_if and not plot_if(self, row):
-            continue
-          xs.append(row[idx1])
-          ys.append(row[idx2])
+      xs, ys = zip(*self.zip_non_null(x, y))
       plt.plot(xs, ys, style, **kwargs)
-      
     else:
       label_vals=[]
       
@@ -259,8 +294,6 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
         label_idx=self.col_index(labels)
       for row in self.rows:
         if row[idx1]!=None:
-          if plot_if and not plot_if(self, row):
-            continue
           xs.append(row[idx1])
           if labels:
             label_vals.append(row[label_idx])
@@ -275,10 +308,10 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
                     size='x-small')
     
     if title==None:
-      if nice_z:
-        title = '%s of %s vs. %s' % (nice_z, nice_x, nice_y)
-      elif nice_y:
-        title = '%s vs. %s' % (nice_x, nice_y)
+      if pd.z_title:
+        title = '%s of %s vs. %s' % (pd.z_title, pd.x_title, pd.y_title)
+      elif pd.y_title:
+        title = '%s vs. %s' % (pd.x_title, pd.y_title)
       else:
         title = nice_x
 
@@ -289,21 +322,21 @@ def plot(self, x, y=None, z=None, style='.', x_title=None, y_title=None,
       plt.legend(loc=0)
     
     if x and y:
-      plt.xlabel(nice_x, size='x-large')
-      if x_range:
-        plt.xlim(x_range[0], x_range[1])
-      if y_range:
-        plt.ylim(y_range[0], y_range[1])
+      plt.xlabel(pd.x_title, size='x-large')
+      x_range = pd.x_range
+      y_range = pd.y_range
+      plt.xlim(x_range[0], x_range[1])
+      plt.ylim(y_range[0], y_range[1])
       if diag_line:
         plt.plot(x_range, y_range, '-')
       
-      plt.ylabel(nice_y, size='x-large')
+      plt.ylabel(pd.y_title, size='x-large')
     else:
       if y_range:
         plt.ylim(y_range[0], y_range[1])
       if x_title:
         plt.xlabel(x_title, size='x-large')
-      plt.ylabel(nice_y, size='x-large')
+      plt.ylabel(pd.y_title, size='x-large')
     if save:
       plt.savefig(save)
     return plt

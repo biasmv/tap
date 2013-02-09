@@ -1,6 +1,6 @@
 import unittest
 
-from table import typeutil
+from tap import typeutil
 
 class TestCoerce(unittest.TestCase):
 

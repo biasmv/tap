@@ -1,10 +1,10 @@
 import unittest, os, sys
-from table import Table, load
-from table import reader
+from tap import Tab, load
+from tap import reader
 import fixtures
 import helper
 
-class TestReader(helper.TableTestCase):
+class TestReader(helper.TabTestCase):
   def test_guess_format_from_file_extensions(self):
     self.assertEqual(reader.guess_format('table_test.CSV'), 'csv')
     self.assertEqual(reader.guess_format('table_test.PICKLE'), 'pickle')
@@ -58,10 +58,10 @@ class TestReader(helper.TableTestCase):
     self.compare_data_from_dict(tab_loaded_fname_ost, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
   
 
-  def test_loadTableOSTUnknownType(self):
+  def test_loadTabOSTUnknownType(self):
     self.assertRaises(ValueError, load, os.path.join('tests/data','ost-table-unknown-type.tab'))
 
-  def testloadTableOSTNoType(self):
+  def testloadTabOSTNoType(self):
     tab = load(os.path.join('tests/data','ost-table-notype.tab'))
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     

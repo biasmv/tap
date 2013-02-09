@@ -2,7 +2,7 @@ import unittest
 import glob
 import os
 
-class TableTestCase(unittest.TestCase):
+class TabTestCase(unittest.TestCase):
 
   def tearDown(self):
     for filename in glob.glob('*_out.*'):

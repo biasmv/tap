@@ -1,4 +1,4 @@
-from table import Table
+from tap import Tab
 
 def create_test_table():
   '''
@@ -11,7 +11,7 @@ def create_test_table():
     NA           9  3.300
 
   '''
-  tab = Table()
+  tab = Tab()
   tab.add_col('first', 'string')
   tab.add_col('second', 'int')
   tab.add_col('third', 'float')

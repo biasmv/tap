@@ -31,7 +31,7 @@ def _load_ost(stream_or_filename):
           else:
             fieldtypes.append('string')
           fieldnames.append(match.group('name'))
-      tab=base.Table(fieldnames, fieldtypes)
+      tab=base.Tab(fieldnames, fieldtypes)
       header=True
       continue
     tab.add_row([x.strip('"') for x in values_pattern.findall(line)])
@@ -58,7 +58,7 @@ def _load_csv(stream_or_filename, sep):
     if first:
       header=row
       types='s'*len(row)
-      tab=base.Table(header, types)
+      tab=base.Tab(header, types)
       first=False
     else:
       tab.add_row(row)
@@ -117,7 +117,7 @@ def load(stream_or_filename, format='auto', sep=','):
       col_name1[type1] <col_name2[type2]>...
 
     The types given in brackets must be one of the data types the
-    :class:`Table` class understands. Each following line in the file then must
+    :class:`Tab` class understands. Each following line in the file then must
     contains exactly the same number of data items as listed in the header. The
     data items are automatically converted to the column format. Lines starting
     with a '#' and empty lines are ignored.
@@ -138,7 +138,7 @@ def load(stream_or_filename, format='auto', sep=','):
     * if all non-null values are true/false/yes/no, the value is set to bool
     * for all other cases, the column type is set to string
 
-  :returns: A new :class:`Table` instance
+  :returns: A new :class:`Tab` instance
   """
   format=format.lower()
   if format=='auto':

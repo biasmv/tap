@@ -1,5 +1,5 @@
 '''
-Unit tests for Table class
+Unit tests for Tab class
 
 Author: Tobias Schmidt
 '''
@@ -38,11 +38,11 @@ except ImportError:
   HAS_PIL=False
   print "Could not find python imagine library: ignoring some table class unit tests"
 
-from table import *
+from tap import *
 import fixtures
 import helper
 
-class TestTableBase(helper.TableTestCase):
+class TestTabBase(helper.TabTestCase):
 
   def testAllowsTosearch_col_names(self):
     tab = fixtures.create_test_table()
@@ -50,13 +50,13 @@ class TestTableBase(helper.TableTestCase):
     self.assertEquals(tab.search_col_names('(first|third)'), ['first','third'])
 
   def testProvidesDirectAccessToColumns(self):
-    tab = Table(['x', 'two'], 'ii')
+    tab = Tab(['x', 'two'], 'ii')
     tab.add_row([1,2])
     self.assertEqual([1], list(tab.x))
     self.assertEqual([2], list(tab.two))
     self.assertRaises(AttributeError, tab.__getattr__, 'one')
   def testzip(self):
-    tab=Table(['col1', 'col2', 'col3', 'col4'], 'sssi')
+    tab=Tab(['col1', 'col2', 'col3', 'col4'], 'sssi')
     tab.add_row(['a', 'b', 'c', 1])
     tab.add_row(['x', 'y', 'z', 2])
     z=tab.zip('col1', 'col3')
@@ -84,7 +84,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertEquals(type(z[1][1]),int)
     self.assertRaises(ValueError, tab.zip, 'col5', 'col3')
   def testpercentiles(self):
-    tab = Table(['nums'], 'i')
+    tab = Tab(['nums'], 'i')
     self.assertEqual(tab.percentiles('nums', [0,100]), [None, None])
     self.assertRaises(ValueError, tab.percentiles, 'nums', [101])
     self.assertRaises(ValueError, tab.percentiles, 'nums', [-1])
@@ -92,12 +92,12 @@ class TestTableBase(helper.TableTestCase):
       tab.add_row([i])
     self.assertEqual(tab.percentiles('nums', [0,30,40,100]), [15,20,35,50])
   def test_default_initialises_to_empty_table(self):
-    tab = Table()
+    tab = Tab()
     self.compare_col_count(tab, 0)
     self.compare_row_count(tab, 0)
     self.assertRaises(ValueError, tab.col_index, 'a')
     
-  def testTableInitSingleColEmpty(self):
+  def testTabInitSingleColEmpty(self):
     '''
     empty table with one float column:
     
@@ -105,13 +105,13 @@ class TestTableBase(helper.TableTestCase):
     ---
     
     '''
-    tab = Table(['x'], 'f')
+    tab = Tab(['x'], 'f')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
     self.compare_col_names(tab, ['x'])
     self.compare_col_types(tab, 'x', 'f')
     
-  def testTableInitMultiColEmpty(self):
+  def testTabInitMultiColEmpty(self):
     '''
     empty table with multiple column with different types:
     
@@ -119,14 +119,14 @@ class TestTableBase(helper.TableTestCase):
     ------------
     
     '''
-    tab = Table(['x','y','z','a'], 'sfbi')
+    tab = Tab(['x','y','z','a'], 'sfbi')
     self.compare_col_count(tab, 4)
     self.compare_row_count(tab, 0)
     self.compare_col_names(tab, ['x','y','z','a'])
     self.compare_col_types(tab, ['x','y','z','a'], 'sfbi')
     self.compare_col_types(tab, ['x','y','z','a'], ['string','float','bool','int'])
       
-  def testTableInitSingleColSingleValueNonEmpty(self):
+  def testTabInitSingleColSingleValueNonEmpty(self):
     '''
     table with one column and one row:
     
@@ -135,13 +135,13 @@ class TestTableBase(helper.TableTestCase):
       5.000
 
     '''
-    tab = Table(['x'], 'f', x=5)
+    tab = Tab(['x'], 'f', x=5)
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 1)
     self.compare_col_names(tab, ['x'])
     self.compare_col_types(tab, 'x', 'f')
     
-  def testTableInitMultiColSingleValueNonEmpty(self):
+  def testTabInitMultiColSingleValueNonEmpty(self):
     '''
     table with three columns and one row:
     
@@ -150,14 +150,14 @@ class TestTableBase(helper.TableTestCase):
       5.000 False   1.425
     
     '''
-    tab = Table(['x','a','z'], 'fbf', x=5, z=1.425, a=False)
+    tab = Tab(['x','a','z'], 'fbf', x=5, z=1.425, a=False)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 1)
     self.compare_col_names(tab, ['x','a','z'])
     self.compare_col_types(tab, ['z','x','a'], 'ffb')
     self.compare_data_from_dict(tab, {'x': [5], 'z': [1.425], 'a': [False]})
     
-  def testTableInitMultiColSingleValueAndNoneNonEmpty(self):
+  def testTabInitMultiColSingleValueAndNoneNonEmpty(self):
     '''
     table with three columns and one row with two None values:
     
@@ -165,14 +165,14 @@ class TestTableBase(helper.TableTestCase):
     ----------------
       5.000 NA   NA 
     '''
-    tab = Table(['x','a1','zzz'], 'fbf', x=5)
+    tab = Tab(['x','a1','zzz'], 'fbf', x=5)
     self.compare_col_count(tab, 3)
     self.compare_row_count(tab, 1)
     self.compare_col_names(tab, ['x','a1','zzz'])
     self.compare_col_types(tab, ['zzz','x','a1'], 'ffb')
     self.compare_data_from_dict(tab, {'x': [5], 'zzz': [None], 'a1': [None]})
   
-  def testTableInitSingleColMultiValueNonEmpty(self):
+  def testTabInitSingleColMultiValueNonEmpty(self):
     '''
     table with one column and five row:
     
@@ -185,19 +185,19 @@ class TestTableBase(helper.TableTestCase):
       4.000
 
     '''
-    tab = Table(['x'], 'f', x=range(5))
+    tab = Tab(['x'], 'f', x=range(5))
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 5)
     self.compare_col_names(tab, ['x'])
     self.compare_col_types(tab, 'x', 'f')
     
-  def testTablefilterColNamesTypes(self):
+  def testTabfilterColNamesTypes(self):
     """
     make sure the col_names and col_types are copied. 
     We don't want them to be referenced to the original table.
     This leads to strange surprises.
     """
-    t = Table(['a', 'b'], 'ii')
+    t = Tab(['a', 'b'], 'ii')
     t.add_row([1,2])
     t.add_row([2,3])
     t.add_row([2,3])
@@ -209,7 +209,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertEqual(len(t.col_names), 2)
     self.assertEqual(len(t.col_types), 2)
 
-  def testTableInitMultiColMultiValueNonEmpty(self):
+  def testTabInitMultiColMultiValueNonEmpty(self):
     '''
     table with two column and four rows:
     
@@ -222,23 +222,23 @@ class TestTableBase(helper.TableTestCase):
 
     '''
     
-    tab = Table(['foo', 'bar'], 'si', bar=range(10,14), foo=['i','love','unit','tests'])
+    tab = Tab(['foo', 'bar'], 'si', bar=range(10,14), foo=['i','love','unit','tests'])
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 4)
     self.compare_col_names(tab, ['foo','bar'])
     self.compare_col_types(tab, ['foo', 'bar'], 'si')
     self.compare_data_from_dict(tab, {'bar': [10,11,12,13], 'foo': ['i','love','unit','tests']})
     
-  def testTableInitMultiColMissingMultiValue(self):
+  def testTabInitMultiColMissingMultiValue(self):
     '''
     test if error is raised when creating rows with missing data
     '''
     
-    self.assertRaises(ValueError, Table, ['foo', 'bar'], 'si',
+    self.assertRaises(ValueError, Tab, ['foo', 'bar'], 'si',
                       bar=range(10,14), foo=['i','love','tests'])
     
     
-  def testTableInitMultiColMultiValueAndNoneNonEmpty(self):
+  def testTabInitMultiColMultiValueAndNoneNonEmpty(self):
     '''
     table with two column and four rows with None values:
     
@@ -250,14 +250,14 @@ class TestTableBase(helper.TableTestCase):
       tests     NA
 
     '''
-    tab = Table(['foo', 'bar'], 'si', foo=['i','love','unit','tests'])
+    tab = Tab(['foo', 'bar'], 'si', foo=['i','love','unit','tests'])
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 4)
     self.compare_col_names(tab, ['foo','bar'])
     self.compare_col_types(tab, ['foo', 'bar'], 'si')
     self.compare_data_from_dict(tab, {'bar': [None,None,None,None], 'foo': ['i','love','unit','tests']})
   
-  def testTableAddSingleCol(self):
+  def testTabAddSingleCol(self):
     '''
     init empty table, add one empty column:
     
@@ -265,7 +265,7 @@ class TestTableBase(helper.TableTestCase):
     -------
     
     '''
-    tab = Table()
+    tab = Tab()
     self.compare_col_count(tab, 0)
     self.compare_row_count(tab, 0)
     tab.add_col('first', 'string')
@@ -274,7 +274,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_col_names(tab, ['first'])
     self.compare_col_types(tab, 'first', 's')
     
-  def testTableAddSingleRow(self):
+  def testTabAddSingleRow(self):
     '''
     init table with one col, add one row:
     
@@ -282,7 +282,7 @@ class TestTableBase(helper.TableTestCase):
     -------
           2
     '''
-    tab = Table(['first'],'i')
+    tab = Tab(['first'],'i')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
     tab.add_row([2], overwrite=None)
@@ -292,7 +292,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_col_types(tab, 'first', 'i')
     self.compare_data_from_dict(tab, {'first': [2]})
     
-  def testTableAddSingleColSingleRow(self):
+  def testTabAddSingleColSingleRow(self):
     '''
     init empty table, add one col, add one row:
     
@@ -300,7 +300,7 @@ class TestTableBase(helper.TableTestCase):
     -------
           2
     '''
-    tab = Table()
+    tab = Tab()
     tab.add_col('first', 'int')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
@@ -311,7 +311,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_col_types(tab, 'first', 'i')
     self.compare_data_from_dict(tab, {'first': [2]})
   
-  def testTableAddSingleColWithRow(self):
+  def testTabAddSingleColWithRow(self):
     '''
     init table with two cols, add row with data, add third column:
     
@@ -320,7 +320,7 @@ class TestTableBase(helper.TableTestCase):
      x            3  3.141
 
     '''
-    tab = Table(['first','second'],'si')
+    tab = Tab(['first','second'],'si')
     self.compare_col_count(tab, 2)
     self.compare_row_count(tab, 0)
     self.compare_col_types(tab, ['first','second'], 'si')
@@ -333,7 +333,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_col_types(tab, ['first','third','second'], 'sfi')
     self.compare_data_from_dict(tab, {'second': [3], 'first': ['x'], 'third': [3.141]})
     
-  def testTableAddMultiColMultiRow(self):
+  def testTabAddMultiColMultiRow(self):
     '''
     init empty table add three cols, add three rows with data:
     
@@ -344,7 +344,7 @@ class TestTableBase(helper.TableTestCase):
      bar          9  3.300
 
     '''
-    tab = Table()
+    tab = Tab()
     tab.add_col('first', 'string')
     tab.add_col('second', 'int')
     tab.add_col('third', 'float')
@@ -358,7 +358,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_row_count(tab, 3)
     self.compare_data_from_dict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'third': [1,2.2,3.3]})
 
-  def testTableAddMultiColMultiRowFromDict(self):
+  def testTabAddMultiColMultiRowFromDict(self):
     '''
     init empty table add three cols, add three rows with data:
     
@@ -369,7 +369,7 @@ class TestTableBase(helper.TableTestCase):
      bar          9  3.300
 
     '''
-    tab = Table()
+    tab = Tab()
     tab.add_col('first', 'string')
     tab.add_col('second', 'int')
     tab.add_col('aaa', 'float')
@@ -383,7 +383,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_row_count(tab, 3)
     self.compare_data_from_dict(tab, {'second': [3,6,9], 'first': ['x','foo','bar'], 'aaa': [1,2.2,3.3]})
     
-  def testTableAddMultiRowMultiCol(self):
+  def testTabAddMultiRowMultiCol(self):
     '''
     init empty table add one col, add three rows with data,
     add one col without data, add one col with data:
@@ -395,7 +395,7 @@ class TestTableBase(helper.TableTestCase):
      bar      NA     3.141
 
     '''
-    tab = Table()
+    tab = Tab()
     tab.add_col('first', 'string')
     self.compare_col_count(tab, 1)
     self.compare_row_count(tab, 0)
@@ -412,7 +412,7 @@ class TestTableBase(helper.TableTestCase):
                                    'third': [3.141, 3.141, 3.141]})
 
   def testAddMultiRowFromDict(self):
-    tab = Table(['x','y','z'], 'fff')
+    tab = Tab(['x','y','z'], 'fff')
     data = {'x': [1.2, 1.5], 'z': [1.6, 2.4]}
     tab.add_row(data)
     self.compare_data_from_dict(tab, {'x': [1.2, 1.5],
@@ -451,7 +451,7 @@ class TestTableBase(helper.TableTestCase):
      row3  False     3
      
     '''
-    tab = Table()
+    tab = Tab()
     tab.add_col('x', 'string')
     tab.add_col('foo', 'bool')
     tab.add_col('bar', 'int')
@@ -478,7 +478,7 @@ class TestTableBase(helper.TableTestCase):
      
     '''
     
-    tab = Table()
+    tab = Tab()
     tab.add_col('x', 'string')
     tab.add_col('foo', 'bool')
     tab.add_col('bar', 'int')
@@ -494,113 +494,113 @@ class TestTableBase(helper.TableTestCase):
                                    'bar': [1, 2, 3]})
 
   def testRaiseErrorOnWrongDataLengthadd_col(self):
-    tab = Table()
+    tab = Tab()
     tab.add_col('a','f',[4.2,4.2,4.2])
     self.assertRaises(ValueError, tab.add_col, 'b', 'f', [4.2,4.2])
 
   def testRaiseErrorColNameAlreadyExists(self):
-    tab = Table()
+    tab = Tab()
     tab.add_col('awesome','f')
     self.assertRaises(ValueError, tab.add_col, 'awesome', 'f')
 
   def testRaiseErrorOnWrongColumnTypes(self):
     # wrong columns types in init
-    self.assertRaises(ValueError, Table, ['bla','bli'], 'ab')
+    self.assertRaises(ValueError, Tab, ['bla','bli'], 'ab')
     
-    tab = Table()
+    tab = Tab()
     # wrong column types in add_col
     self.assertRaises(ValueError, tab.add_col, 'bla', 'a')
     
   def testParseColumnTypes(self):
-    types = Table._parse_col_types(['i','f','s','b'])
+    types = Tab._parse_col_types(['i','f','s','b'])
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types(['int','float','string','bool'])
+    types = Tab._parse_col_types(['int','float','string','bool'])
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types(['i','float','s','bool'])
+    types = Tab._parse_col_types(['i','float','s','bool'])
     self.assertEquals(types, ['int','float','string','bool'])
 
-    types = Table._parse_col_types(['i','fLOAT','S','bool'])
+    types = Tab._parse_col_types(['i','fLOAT','S','bool'])
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types('ifsb')
+    types = Tab._parse_col_types('ifsb')
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types('int,float,string,bool')
+    types = Tab._parse_col_types('int,float,string,bool')
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types('int,f,s,bool')
+    types = Tab._parse_col_types('int,f,s,bool')
     self.assertEquals(types, ['int','float','string','bool'])
     
-    types = Table._parse_col_types('INT,F,s,bOOL')
+    types = Tab._parse_col_types('INT,F,s,bOOL')
     self.assertEquals(types, ['int','float','string','bool'])
 
-    types = Table._parse_col_types('boOl')
+    types = Tab._parse_col_types('boOl')
     self.assertEquals(types, ['bool'])
     
-    types = Table._parse_col_types('S')
+    types = Tab._parse_col_types('S')
     self.assertEquals(types, ['string'])
     
-    types = Table._parse_col_types(['i'])
+    types = Tab._parse_col_types(['i'])
     self.assertEquals(types, ['int'])
     
-    types = Table._parse_col_types(['FLOAT'])
+    types = Tab._parse_col_types(['FLOAT'])
     self.assertEquals(types, ['float'])
 
-    self.assertRaises(ValueError, Table._parse_col_types, 'bfstring')
-    self.assertRaises(ValueError, Table._parse_col_types, ['b,f,string'])
-    self.assertRaises(ValueError, Table._parse_col_types, 'bi2')
-    self.assertRaises(ValueError, Table._parse_col_types, ['b',2,'string'])
-    self.assertRaises(ValueError, Table._parse_col_types, [['b'],['f','string']])
-    self.assertRaises(ValueError, Table._parse_col_types, 'a')
-    self.assertRaises(ValueError, Table._parse_col_types, 'foo')
-    self.assertRaises(ValueError, Table._parse_col_types, ['a'])
-    self.assertRaises(ValueError, Table._parse_col_types, ['foo'])
+    self.assertRaises(ValueError, Tab._parse_col_types, 'bfstring')
+    self.assertRaises(ValueError, Tab._parse_col_types, ['b,f,string'])
+    self.assertRaises(ValueError, Tab._parse_col_types, 'bi2')
+    self.assertRaises(ValueError, Tab._parse_col_types, ['b',2,'string'])
+    self.assertRaises(ValueError, Tab._parse_col_types, [['b'],['f','string']])
+    self.assertRaises(ValueError, Tab._parse_col_types, 'a')
+    self.assertRaises(ValueError, Tab._parse_col_types, 'foo')
+    self.assertRaises(ValueError, Tab._parse_col_types, ['a'])
+    self.assertRaises(ValueError, Tab._parse_col_types, ['foo'])
   
   def testShortLongColumnTypes(self):
-    tab = Table(['x','y','z','a'],['i','f','s','b'])
+    tab = Tab(['x','y','z','a'],['i','f','s','b'])
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],['int','float','string','bool'])
+    tab = Tab(['x','y','z','a'],['int','float','string','bool'])
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],['i','float','s','bool'])
+    tab = Tab(['x','y','z','a'],['i','float','s','bool'])
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],['i','fLOAT','S','bool'])
+    tab = Tab(['x','y','z','a'],['i','fLOAT','S','bool'])
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],'ifsb')
+    tab = Tab(['x','y','z','a'],'ifsb')
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],'int,float,string,bool')
+    tab = Tab(['x','y','z','a'],'int,float,string,bool')
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],'int,f,s,bool')
+    tab = Tab(['x','y','z','a'],'int,f,s,bool')
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x','y','z','a'],'INT,F,s,bOOL')
+    tab = Tab(['x','y','z','a'],'INT,F,s,bOOL')
     self.compare_col_types(tab, ['x','y','z','a'], 'ifsb')
     
-    tab = Table(['x'], 'boOl')
+    tab = Tab(['x'], 'boOl')
     self.compare_col_types(tab, ['x'], 'b')
-    tab = Table(['x'], 'B')
+    tab = Tab(['x'], 'B')
     self.compare_col_types(tab, ['x'], 'b')
-    tab = Table(['x'], ['b'])
+    tab = Tab(['x'], ['b'])
     self.compare_col_types(tab, ['x'], 'b')
-    tab = Table(['x'], ['Bool'])
+    tab = Tab(['x'], ['Bool'])
     self.compare_col_types(tab, ['x'], 'b')
     
-    self.assertRaises(ValueError, Table, ['x','y','z'], 'bfstring')
-    self.assertRaises(ValueError, Table, ['x','y','z'], ['b,f,string'])
-    self.assertRaises(ValueError, Table, ['x','y','z'], 'bi2')
-    self.assertRaises(ValueError, Table, ['x','y','z'], ['b',2,'string'])
-    self.assertRaises(ValueError, Table, ['x','y','z'], [['b'],['f','string']])
-    self.assertRaises(ValueError, Table, ['x'], 'a')
-    self.assertRaises(ValueError, Table, ['x'], 'foo')
-    self.assertRaises(ValueError, Table, ['x'], ['a'])
-    self.assertRaises(ValueError, Table, ['x'], ['foo'])
+    self.assertRaises(ValueError, Tab, ['x','y','z'], 'bfstring')
+    self.assertRaises(ValueError, Tab, ['x','y','z'], ['b,f,string'])
+    self.assertRaises(ValueError, Tab, ['x','y','z'], 'bi2')
+    self.assertRaises(ValueError, Tab, ['x','y','z'], ['b',2,'string'])
+    self.assertRaises(ValueError, Tab, ['x','y','z'], [['b'],['f','string']])
+    self.assertRaises(ValueError, Tab, ['x'], 'a')
+    self.assertRaises(ValueError, Tab, ['x'], 'foo')
+    self.assertRaises(ValueError, Tab, ['x'], ['a'])
+    self.assertRaises(ValueError, Tab, ['x'], ['foo'])
     
   def testremove_col(self):
     tab = fixtures.create_test_table()
@@ -612,7 +612,7 @@ class TestTableBase(helper.TableTestCase):
     tab = fixtures.create_test_table()
     self.assertRaises(ValueError, tab.remove_col, "unknown col")
     
-  def testsortTable(self):
+  def testsortTab(self):
     tab = fixtures.create_test_table()
     self.compare_data_from_dict(tab, {'first': ['x','foo',None], 'second': [3,None,9], 'third': [None,2.2,3.3]})
     tab.sort('first', '-')
@@ -623,7 +623,7 @@ class TestTableBase(helper.TableTestCase):
     self.compare_data_from_dict(tab, {'first': [None,'foo','x'], 'second': [9,None,3], 'third': [3.3,2.2,None]})
 
 
-  def testmergeTable(self):
+  def testmergeTab(self):
     '''
     merge the following two tables:
     
@@ -650,12 +650,12 @@ class TestTableBase(helper.TableTestCase):
     3 |   20 |  200
     
     '''
-    tab1 = Table(['x','y'],['int','int'])
+    tab1 = Tab(['x','y'],['int','int'])
     tab1.add_row([1,10])
     tab1.add_row([2,15])
     tab1.add_row([3,20])
     
-    tab2 = Table(['x','u'],['int','int'])
+    tab2 = Tab(['x','u'],['int','int'])
     tab2.add_row([1,100])
     tab2.add_row([3,200])
     tab2.add_row([4,400])
@@ -668,7 +668,7 @@ class TestTableBase(helper.TableTestCase):
     tab_merged.sort('x', order='-')
     self.compare_data_from_dict(tab_merged, {'x': [1,3], 'y': [10,20], 'u': [100,200]})
     
-  def testfilterTable(self):
+  def testfilterTab(self):
     tab = fixtures.create_test_table()
     tab.add_row(['foo',1,5.15])
     tab.add_row(['foo',0,1])
@@ -689,7 +689,7 @@ class TestTableBase(helper.TableTestCase):
     # raise Error when using non existing column name for filtering
     self.assertRaises(ValueError,tab.filter,first='foo',nonexisting=1)
     
-  def testminTable(self):
+  def testminTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[True,True,False])
 
@@ -711,7 +711,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertEquals(tab.min_row('fourth'),[None, 9, 3.3, False])
     self.assertRaises(ValueError,tab.min_row,'fifth')
     
-  def testmaxTable(self):
+  def testmaxTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,True])
     
@@ -733,7 +733,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertEquals(tab.max_row('fourth'),['foo', None, 2.2, True])
     self.assertRaises(ValueError,tab.max_row,'fifth')
     
-  def testsumTable(self):
+  def testsumTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
@@ -745,7 +745,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertRaises(TypeError,tab.sum,'fifth')
     self.assertRaises(ValueError,tab.sum,'sixth')
     
-  def testmedianTable(self):
+  def testmedianTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
@@ -757,7 +757,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertRaises(TypeError,tab.median,'fifth')
     self.assertRaises(ValueError,tab.median,'sixth')
     
-  def testmeanTable(self):
+  def testmeanTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
@@ -769,7 +769,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertRaises(TypeError,tab.mean,'fifth')
     self.assertRaises(ValueError,tab.mean,'sixth')
     
-  def testrow_meanTable(self):
+  def testrow_meanTab(self):
     '''
       first  second  third fourth
     -----------------------------
@@ -791,7 +791,7 @@ class TestTableBase(helper.TableTestCase):
                                    'fourth': [1,2,3,None]})
     
     
-  def teststd_devTable(self):
+  def teststd_devTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     tab.add_col('fifth','string',['foo','bar',None])
@@ -803,7 +803,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertRaises(TypeError,tab.std_dev,'fifth')
     self.assertRaises(ValueError,tab.std_dev,'sixth')
     
-  def testcountTable(self):
+  def testcountTab(self):
     tab = fixtures.create_test_table()
     tab.add_col('fourth','bool',[False,True,False])
     
@@ -821,7 +821,7 @@ class TestTableBase(helper.TableTestCase):
     enrx_ref = [0.0, 0.041666666666666664, 0.083333333333333329, 0.125, 0.16666666666666666, 0.20833333333333334, 0.25, 0.29166666666666669, 0.33333333333333331, 0.375, 0.41666666666666669, 0.45833333333333331, 0.5, 0.54166666666666663, 0.58333333333333337, 0.625, 0.66666666666666663, 0.70833333333333337, 0.75, 0.79166666666666663, 0.83333333333333337, 0.875, 0.91666666666666663, 0.95833333333333337, 1.0]
     enry_ref = [0.0, 0.16666666666666666, 0.33333333333333331, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.66666666666666663, 0.66666666666666663, 0.83333333333333337, 0.83333333333333337, 0.83333333333333337, 0.83333333333333337, 0.83333333333333337, 0.83333333333333337, 0.83333333333333337, 1.0, 1.0, 1.0, 1.0]
     
-    tab = Table(['score', 'rmsd', 'classific'], 'ffb',
+    tab = Tab(['score', 'rmsd', 'classific'], 'ffb',
                 score=[2.64,1.11,2.17,0.45,0.15,0.85,1.13,2.90,0.50,1.03,1.46,2.83,1.15,2.04,0.67,1.27,2.22,1.90,0.68,0.36,1.04,2.46,0.91,0.60],
                 rmsd=[9.58,1.61,7.48,0.29,1.68,3.52,3.34,8.17,4.31,2.85,6.28,8.78,0.41,6.29,4.89,7.30,4.26,3.51,3.38,0.04,2.21,0.24,7.58,8.40],
                 classific=[False,True,False,True,True,False,False,False,False,False,False,False,True,False,False,False,False,False,False,True,False,True,False,False])
@@ -866,7 +866,7 @@ class TestTableBase(helper.TableTestCase):
   def testCalcEnrichmentAUCwithNone(self):
     if not HAS_NUMPY:
       return
-    tab = Table(['pred_bfactors','ref_distances'], 'ff',
+    tab = Tab(['pred_bfactors','ref_distances'], 'ff',
                 ref_distances=[None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 2.445, 2.405, 2.361, 2.124, 1.957, 1.897, 1.422, 1.348, 1.247, 1.165, 1.153, 1.011, 0.992, 0.885, 0.852, 0.775, 0.757, 0.755, 0.735, 0.71, 0.656, 0.636, 0.609, 0.607, 0.604, 0.595, 0.572, 0.549, 0.458, 0.438, 0.41, 0.345, 0.304, 0.254, 0.241, 0.227, 2.68, 1.856, 1.312, 0.453],
                 pred_bfactors=[1.85000,  2.01000,  2.12000,  2.14000,  2.15000,  2.18000,  2.20000,  2.26000,  2.28000,  2.31000,  2.37000,  2.38000,  2.39000,  2.39000,  2.43000,  2.43000,  2.49000,  2.51000,  2.56000,  2.58000,  2.65000,  2.67000,  2.72000,  2.75000,  2.77000,  2.81000,  2.91000,  2.95000,  3.09000,  3.12000,  3.25000,  3.30000,  3.33000,  3.38000,  3.39000,  3.41000,  3.41000,  3.45000,  3.57000,  3.59000,  3.64000,  3.76000,  3.76000,  3.92000,  3.95000,  3.95000,  4.05000,  4.06000,  4.07000,  4.14000,  4.14000,  4.18000,  4.24000,  4.28000,  4.40000,  4.43000,  4.43000,  4.48000,  4.50000,  4.51000,  4.54000,  4.63000,  4.64000,  4.79000,  4.93000,  5.07000,  5.12000,  5.20000,  5.41000,  5.42000,  5.44000,  5.52000,  5.68000,  5.78000,  5.80000,  5.93000,  6.11000,  6.31000,  6.50000,  6.53000,  6.55000,  6.60000,  6.73000,  6.79000,  6.81000,  7.44000,  8.45000,  8.81000,  9.04000,  9.29000,  9.30000, 10.99000, 11.42000, 12.55000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 99.99000, 99.99000, 99.99000, 99.99000])
 
@@ -885,7 +885,7 @@ class TestTableBase(helper.TableTestCase):
     if not HAS_NUMPY:
       return
     auc_ref = 0.65277777777777779
-    tab = Table(['score', 'rmsd', 'classific'], 'ffb',
+    tab = Tab(['score', 'rmsd', 'classific'], 'ffb',
                 score=[2.64,1.11,2.17,0.45,0.15,0.85,1.13,2.90,0.50,1.03,1.46,2.83,1.15,2.04,0.67,1.27,2.22,1.90,0.68,0.36,1.04,2.46,0.91,0.60],
                 rmsd=[9.58,1.61,7.48,0.29,1.68,3.52,3.34,8.17,4.31,2.85,6.28,8.78,0.41,6.29,4.89,7.30,4.26,3.51,3.38,0.04,2.21,0.24,7.58,8.40],
                 classific=[False,True,False,True,True,False,False,False,False,False,False,False,True,False,False,False,False,False,False,True,False,True,False,False])
@@ -899,7 +899,7 @@ class TestTableBase(helper.TableTestCase):
   def testplot_roc(self):
     if not HAS_MPL or not HAS_PIL:
       return
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[True, True, False, True, True, True, False, False, True, False, True, False, True, False, False, False, True, False, True, False],
                 score=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     pl = tab.plot_roc(score_col='score', score_dir='+',
@@ -910,7 +910,7 @@ class TestTableBase(helper.TableTestCase):
     #self.CompareImages(img1, img2)
 
     # no true positives
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False],
                 score=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     pl = tab.plot_roc(score_col='score', score_dir='+',
@@ -921,7 +921,7 @@ class TestTableBase(helper.TableTestCase):
   def testplot_rocSameValues(self):
     if not HAS_MPL or not HAS_PIL:
       return
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[True, True, False, True, True, True, False, False, True, False, True, False, True, False, False, False, True, False, True, False],
                 score=[0.9, 0.8, 0.7, 0.7, 0.7, 0.7, 0.53, 0.52, 0.51, 0.505, 0.4, 0.4, 0.4, 0.4, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     pl = tab.plot_roc(score_col='score', score_dir='+',
@@ -935,7 +935,7 @@ class TestTableBase(helper.TableTestCase):
   def testCalcROCAUCwithNone(self):
     if not HAS_NUMPY:
       return
-    tab = Table(['pred_bfactors','ref_distances'], 'ff',
+    tab = Tab(['pred_bfactors','ref_distances'], 'ff',
                 ref_distances=[None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, 2.445, 2.405, 2.361, 2.124, 1.957, 1.897, 1.422, 1.348, 1.247, 1.165, 1.153, 1.011, 0.992, 0.885, 0.852, 0.775, 0.757, 0.755, 0.735, 0.71, 0.656, 0.636, 0.609, 0.607, 0.604, 0.595, 0.572, 0.549, 0.458, 0.438, 0.41, 0.345, 0.304, 0.254, 0.241, 0.227, 2.68, 1.856, 1.312, 0.453],
                 pred_bfactors=[1.85000,  2.01000,  2.12000,  2.14000,  2.15000,  2.18000,  2.20000,  2.26000,  2.28000,  2.31000,  2.37000,  2.38000,  2.39000,  2.39000,  2.43000,  2.43000,  2.49000,  2.51000,  2.56000,  2.58000,  2.65000,  2.67000,  2.72000,  2.75000,  2.77000,  2.81000,  2.91000,  2.95000,  3.09000,  3.12000,  3.25000,  3.30000,  3.33000,  3.38000,  3.39000,  3.41000,  3.41000,  3.45000,  3.57000,  3.59000,  3.64000,  3.76000,  3.76000,  3.92000,  3.95000,  3.95000,  4.05000,  4.06000,  4.07000,  4.14000,  4.14000,  4.18000,  4.24000,  4.28000,  4.40000,  4.43000,  4.43000,  4.48000,  4.50000,  4.51000,  4.54000,  4.63000,  4.64000,  4.79000,  4.93000,  5.07000,  5.12000,  5.20000,  5.41000,  5.42000,  5.44000,  5.52000,  5.68000,  5.78000,  5.80000,  5.93000,  6.11000,  6.31000,  6.50000,  6.53000,  6.55000,  6.60000,  6.73000,  6.79000,  6.81000,  7.44000,  8.45000,  8.81000,  9.04000,  9.29000,  9.30000, 10.99000, 11.42000, 12.55000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 50.00000, 99.99000, 99.99000, 99.99000, 99.99000])
 
@@ -954,14 +954,14 @@ class TestTableBase(helper.TableTestCase):
     if not HAS_NUMPY:
       return
     auc_ref = 0.68
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[True, True, False, True, True, True, False, False, True, False, True, False, True, False, False, False, True, False, True, False],
                 score=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     auc = tab.compute_roc_auc(score_col='score', score_dir='+', class_col='classific')
     self.assertAlmostEquals(auc, auc_ref)
 
     # no true positives
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False],
                 score=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     auc = tab.compute_roc_auc(score_col='score', score_dir='+', class_col='classific')
@@ -970,7 +970,7 @@ class TestTableBase(helper.TableTestCase):
   def testCalcROCAUCWithCutoff(self):
     if not HAS_NUMPY:
       return
-    tab = Table(['classific', 'score'], 'ff',
+    tab = Tab(['classific', 'score'], 'ff',
                 classific=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1],
                 score=[0.9, 0.8, 0.7, 0.6, 0.55, 0.54, 0.53, 0.52, 0.51, 0.505, 0.4, 0.39, 0.38, 0.37, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     auc = tab.compute_roc_auc(score_col='score', class_col='classific', class_cutoff=0.5)
@@ -992,14 +992,14 @@ class TestTableBase(helper.TableTestCase):
     if not HAS_NUMPY:
       return
     auc_ref = 0.685
-    tab = Table(['classific', 'score'], 'bf',
+    tab = Tab(['classific', 'score'], 'bf',
                 classific=[True, True, False, True, True, True, False, False, True, False, True, False, True, False, False, False, True, False, True, False],
                 score=[0.9, 0.8, 0.7, 0.7, 0.7, 0.7, 0.53, 0.52, 0.51, 0.505, 0.4, 0.4, 0.4, 0.4, 0.36, 0.35, 0.34, 0.33, 0.30, 0.1])
     auc = tab.compute_roc_auc(score_col='score', score_dir='+', class_col='classific')
     self.assertAlmostEquals(auc, auc_ref)
 
   def testCalcMCC(self):
-    tab = Table(['score', 'rmsd', 'class_rmsd', 'class_score', 'class_wrong'], 'ffbbb',
+    tab = Tab(['score', 'rmsd', 'class_rmsd', 'class_score', 'class_wrong'], 'ffbbb',
                 score=      [2.64, 1.11, 2.17, 0.45,0.15,0.85, 1.13, 2.90, 0.50, 1.03, 1.46, 2.83, 1.15, 2.04, 0.67, 1.27, 2.22, 1.90, 0.68, 0.36,1.04, 2.46, 0.91,0.60],
                 rmsd=[9.58,1.61,7.48,0.29,1.68,3.52,3.34,8.17,4.31,2.85,6.28,8.78,0.41,6.29,4.89,7.30,4.26,3.51,3.38,0.04,2.21,0.24,7.58,8.40],
                 class_rmsd= [False,True, False,True,True,False,False,False,False,False,False,False,True, False,False,False,False,False,False,True,False,True,False,False],
@@ -1021,7 +1021,7 @@ class TestTableBase(helper.TableTestCase):
     
 
   def testCalcMCCPreclassified(self):
-    tab = Table(['reference', 'prediction1', 'prediction2'],'bbb',
+    tab = Tab(['reference', 'prediction1', 'prediction2'],'bbb',
                 reference=  [False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True,  False, False, True,  False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, True,  False, False, True,  False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, False, False, False, False, False],
                 prediction1=[False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True,  False, True, False, True, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, True,  False, False, False, False, False, False],
                 prediction2=[False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True,  False, False, True,  False, False, False, False, False, False, False, False, False, False, False, False, False, False, True, False, True, False, False, True,  False, True,  True,  False, False, False, False, False, False, False, False, False, False, True, False, False, True, False, False, False, True,  False, False, False, False])
@@ -1030,7 +1030,7 @@ class TestTableBase(helper.TableTestCase):
     mcc = tab.compute_mcc(score_col='prediction2', class_col='reference')
     self.assertAlmostEquals(mcc, 0.882089673321)
 
-  def testTableAsNumpyMatrix(self):
+  def testTabAsNumpyMatrix(self):
     if not HAS_NUMPY:
       return
 
@@ -1068,7 +1068,7 @@ class TestTableBase(helper.TableTestCase):
   def test_can_calculate_optimal_prefactors(self):
     if not HAS_NUMPY:
       return
-    tab = Table(['a','b','c','d','e','f'],
+    tab = Tab(['a','b','c','d','e','f'],
                 'ffffff',
                 a=[1,2,3,4,5,6,7,8,9],
                 b=[2,3,4,5,6,7,8,9,10],
@@ -1101,7 +1101,7 @@ class TestTableBase(helper.TableTestCase):
     self.assertRaises(RuntimeError, tab.optimal_prefactors, 'c',weights='d')
 
   def test_can_smooth_columns_with_gaussians(self):
-    tab = Table(['a','b','c','d','e','f'],'fffffi',
+    tab = Tab(['a','b','c','d','e','f'],'fffffi',
                 a=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
                 b=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
                 c=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
@@ -1146,13 +1146,13 @@ class TestTableBase(helper.TableTestCase):
      
 
   def test_table_is_empty(self):
-    tab = Table()
+    tab = Tab()
     self.assertTrue(tab.empty())
     self.assertTrue(tab.empty(ignore_nan=False))
     self.assertRaises(ValueError, tab.empty, 'a')
     
     # empty table
-    tab = Table(['a','b','c'], 'fff')
+    tab = Tab(['a','b','c'], 'fff')
     self.assertTrue(tab.empty())
     self.assertTrue(tab.empty('a'))
     self.assertTrue(tab.empty('b'))
@@ -1266,7 +1266,7 @@ class TestTableBase(helper.TableTestCase):
     
     # different order of the data
     tab = fixtures.create_test_table()
-    tab2 = Table(['third','second','first'],
+    tab2 = Tab(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.3],
                   first=['x','foo',None],
@@ -1291,7 +1291,7 @@ class TestTableBase(helper.TableTestCase):
     
     # with overwrite (no matching value)
     tab = fixtures.create_test_table()
-    tab2 = Table(['third','second','first'],
+    tab2 = Tab(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.3],
                   first=['a','bar','bla'],
@@ -1303,7 +1303,7 @@ class TestTableBase(helper.TableTestCase):
     
     # with overwrite (with matching values)
     tab = fixtures.create_test_table()
-    tab2 = Table(['third','second','first'],
+    tab2 = Tab(['third','second','first'],
                   'fis',
                   third=[None,2.2,3.4],
                   first=['a','bar','bla'],
@@ -1314,8 +1314,8 @@ class TestTableBase(helper.TableTestCase):
                                    'third': [None,2.2,3.3,3.4]})
     
     # cannot extend if types are different
-    tab = Table('aaa','s',a=['a','b'])
-    tab2 = Table('aaa','i',a=[1,2])
+    tab = Tab('aaa','s',a=['a','b'])
+    tab2 = Tab('aaa','i',a=[1,2])
     self.assertRaises(TypeError, tab.extend, tab2)
     
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ class BinaryColExpr:
   def __div__(self, rhs):
     return BinaryColExpr(operator.div, self, rhs)
 
-class TableCol:
+class TabCol:
   def __init__(self, table, col):
     self._table=table
     if type(col)==str:
@@ -69,7 +69,7 @@ class TableCol:
     return BinaryColExpr(operator.div, self, rhs)
 
 
-class Table(object):
+class Tab(object):
   """
   
   The table class provides convenient access to data in tabular form. An empty 
@@ -77,14 +77,14 @@ class Table(object):
   
   .. code-block:: python
   
-    tab=Table()
+    tab=Tab()
     
   If you want to add columns directly when creating the table, column names
   and *column types* can be specified as follows
   
   .. code-block:: python
   
-    tab=Table(['nameX','nameY','nameZ'], 'sfb')
+    tab=Tab(['nameX','nameY','nameZ'], 'sfb')
     
   this will create three columns called nameX, nameY and nameZ of type string,
   float and bool, respectively. There will be no data in the table and thus,
@@ -105,7 +105,7 @@ class Table(object):
   
   .. code-block:: python
   
-    tab=Table(['nameX','nameY','nameZ'],
+    tab=Tab(['nameX','nameY','nameZ'],
               'sfb',
               nameX=['a','b','c'],
               nameY=[0.1, 1.2, 3.414],
@@ -142,7 +142,7 @@ class Table(object):
     # __dict__
     if 'col_names' not in self.__dict__ or col_name not in self.col_names:
       raise AttributeError(col_name)
-    return TableCol(self, col_name)
+    return TabCol(self, col_name)
 
   @staticmethod
   def _parse_col_types(types, exp_num=None):
@@ -247,7 +247,7 @@ class Table(object):
     :raises: ValueError if no column with the name is found
     '''
     if col not in self.col_names:
-      raise ValueError('Table has no column named "%s"' % col)
+      raise ValueError('Tab has no column named "%s"' % col)
     return self.col_names.index(col)
   
   def get_col_names(self):
@@ -280,9 +280,9 @@ class Table(object):
   
   def __getitem__(self, k):
     if type(k)==int:
-      return TableCol(self, self.col_names[k])
+      return TabCol(self, self.col_names[k])
     else:
-      return TableCol(self, k)
+      return TabCol(self, k)
 
   def __setitem__(self, k, value):
     col_index=k
@@ -511,7 +511,7 @@ Statistics for column %(col)s
     .. code-block:: python
 
       # create table with three float columns
-      tab = Table(['x','y','z'], 'fff')
+      tab = Tab(['x','y','z'], 'fff')
 
       # add rows from dict
       data = {'x': [1.2, 1.6], 'z': [1.6, 5.3]}
@@ -599,7 +599,7 @@ Statistics for column %(col)s
 
     .. code-block:: python
     
-      tab=Table(['x'], 'f', x=range(5))
+      tab=Tab(['x'], 'f', x=range(5))
       tab.add_col('even', 'bool', itertools.cycle([True, False]))
       print tab
     
@@ -622,7 +622,7 @@ Statistics for column %(col)s
 
     .. code-block:: python
 
-      tab=Table(['x'], 'f', x=range(5))
+      tab=Tab(['x'], 'f', x=range(5))
       tab.add_col('num', 'i', 1)
       print tab
 
@@ -691,7 +691,7 @@ Statistics for column %(col)s
     args are unary callables returning true if the row should be included in the
     result and false if not.
     """
-    filt_tab=Table(list(self.col_names), list(self.col_types))
+    filt_tab=Tab(list(self.col_names), list(self.col_types))
     for row in self.rows:
       matches=True
       for func in args:
@@ -751,7 +751,7 @@ Statistics for column %(col)s
     
     .. code-block:: python
     
-      tab=Table.load('...')
+      tab=Tab.load('...')
       for col1, col2 in tab.zip('col1', 'col2'):
         print col1, col2
     
@@ -759,7 +759,7 @@ Statistics for column %(col)s
     
     .. code-block:: python
     
-      tab=Table.load('...')
+      tab=Tab.load('...')
       for col1, col2 in zip(tab['col1'], tab['col2']):
         print col1, col2
     """
@@ -1913,7 +1913,7 @@ def merge(table1, table2, by, only_matching=False):
     if key in common2:
       raise ValueError('duplicate key "%s" in second table' % (str(key)))
     common2[key]=row
-  new_tab=Table(table1.col_names+col_names, table1.col_types+col_types)
+  new_tab=Tab(table1.col_names+col_names, table1.col_types+col_types)
   for k, v in common1.iteritems():
     row=v+[None for i in range(len(table2.col_names)-len(common2_indices))]
     matched=False

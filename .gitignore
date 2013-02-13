@@ -3,3 +3,4 @@
 /docs/_build
 /tap.egg-info
 /dist
+/tests/data/*-out.png

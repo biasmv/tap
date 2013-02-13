@@ -88,3 +88,82 @@ def coerce(value, ty):
     return bool(value)
   raise ValueError('Unknown type %s' % ty)
 
+
+class ColTypeParser:
+  SHORT_TO_LONG_TYPES = {'s' : 'string', 'i': 'int', 'b' : 'bool', 'f' : 'float'}
+
+  SHORT_TYPES = SHORT_TO_LONG_TYPES.keys()
+  LONG_TYPES = SHORT_TO_LONG_TYPES.values()
+
+  def from_str(self, type_str):
+    type_str = type_str.lower()
+    
+    # single value
+    if type_str in ColTypeParser.LONG_TYPES:
+      return [type_str]
+    if type_str in ColTypeParser.SHORT_TYPES:
+      return [ColTypeParser.SHORT_TO_LONG_TYPES[type_str]]
+    
+    # comma separated list of long or short types
+    type_list = []
+    if type_str.find(',')!=-1:
+      for t in type_str.split(','):
+        if t in ColTypeParser.LONG_TYPES:
+          type_list.append(t)
+        elif t in ColTypeParser.SHORT_TYPES:
+          type_list.append(ColTypeParser.SHORT_TO_LONG_TYPES[t])
+        else:
+          raise ValueError('Unknown type %s in types %s'%(t,type_str))
+    
+    # string of short types
+    else:
+      for t in type_str:
+        if t in ColTypeParser.SHORT_TYPES:
+          type_list.append(ColTypeParser.SHORT_TO_LONG_TYPES[t])
+        else:
+          raise ValueError('Unknown type %s in types %s'%(t,type_str))
+    return type_list
+  
+  def from_list(self, types):
+    type_list = []
+    for t in types:
+      # must be string type
+      if type(t)==str:
+        t = t.lower()
+        if t in ColTypeParser.LONG_TYPES:
+          type_list.append(t)
+        elif t in ColTypeParser.SHORT_TYPES:
+          type_list.append(ColTypeParser.SHORT_TO_LONG_TYPES[t])
+        else:
+          raise ValueError('Unknown type %s in types %s'%(t,types))
+      
+      # non-string type
+      else:
+        raise ValueError('Col type %s must be string or list'%types)
+    return type_list
+  
+
+  def parse(self, types, exp_num=None):
+    if types==None:
+      return None
+    
+    type_list = []
+    
+    # string type
+    if is_scalar(types):
+      if type(types) == str:
+        type_list = self.from_str(types)
+      else:
+        raise ValueError('Col type %s must be string or list' % types)
+    # list type
+    else:
+      type_list = self.from_list(types)
+
+    if exp_num:
+      if len(type_list)!=exp_num:
+        raise ValueError('Parsed number of col types (%i) differs from ' + \
+                         'expected (%i) in types %s'%(len(type_list),exp_num,types))
+      
+    return type_list
+
+

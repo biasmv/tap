@@ -144,73 +144,10 @@ class Tab(object):
       raise AttributeError(col_name)
     return TabCol(self, col_name)
 
+
   @staticmethod
-  def _parse_col_types(types, exp_num=None):
-    if types==None:
-      return None
-    
-    short2long = {'s' : 'string', 'i': 'int', 'b' : 'bool', 'f' : 'float'}
-    allowed_short = short2long.keys()
-    allowed_long = short2long.values()
-    
-    type_list = []
-    
-    # string type
-    if typeutil.is_scalar(types):
-      if type(types)==str:
-        types = types.lower()
-        
-        # single value
-        if types in allowed_long:
-          type_list.append(types)
-        elif types in allowed_short:
-          type_list.append(short2long[types])
-        
-        # comma separated list of long or short types
-        elif types.find(',')!=-1:
-          for t in types.split(','):
-            if t in allowed_long:
-              type_list.append(t)
-            elif t in allowed_short:
-              type_list.append(short2long[t])
-            else:
-              raise ValueError('Unknown type %s in types %s'%(t,types))
-        
-        # string of short types
-        else:
-          for t in types:
-            if t in allowed_short:
-              type_list.append(short2long[t])
-            else:
-              raise ValueError('Unknown type %s in types %s'%(t,types))
-      
-      # non-string type
-      else:
-        raise ValueError('Col type %s must be string or list'%types)
-    
-    # list type
-    else:
-      for t in types:
-        # must be string type
-        if type(t)==str:
-          t = t.lower()
-          if t in allowed_long:
-            type_list.append(t)
-          elif t in allowed_short:
-            type_list.append(short2long[t])
-          else:
-            raise ValueError('Unknown type %s in types %s'%(t,types))
-        
-        # non-string type
-        else:
-          raise ValueError('Col type %s must be string or list'%types)
-    
-    if exp_num:
-      if len(type_list)!=exp_num:
-        raise ValueError('Parsed number of col types (%i) differs from ' + \
-                         'expected (%i) in types %s'%(len(type_list),exp_num,types))
-      
-    return type_list
+  def _parse_col_types(col_types, exp_num=None):
+    return typeutil.ColTypeParser().parse(col_types, exp_num=exp_num)
 
   def set_name(self, name):
     '''

@@ -31,7 +31,9 @@ print merged
 # 25    Anton   100      
 ```
 
+# read the docs
 
+The documentation for the latest version of `tap` is available [here](https://tap.readthedocs.org/en/latest/)
 
 
 

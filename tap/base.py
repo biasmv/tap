@@ -754,8 +754,7 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._max(col)
-    return val
+    return self._max(col)[0]
   
   def max_idx(self, col):
     """
@@ -766,8 +765,7 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._max(col)
-    return idx
+    return self._max(col)[1]
   
   def _min(self, col):
     if len(self.rows)==0:
@@ -795,8 +793,7 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._min(col)
-    return val
+    return self._min(col)[0]
   
   def min_row(self, col):
     """
@@ -822,8 +819,7 @@ Statistics for column %(col)s
     :param col: column name
     :type col: :class:`str`
     """
-    val, idx = self._min(col)
-    return idx
+    return self._min(col)[1]
   
   def sum(self, col):
     """

@@ -1318,6 +1318,3 @@ class TestTabBase(helper.TabTestCase):
     tab2 = Tab('aaa','i',a=[1,2])
     self.assertRaises(TypeError, tab.extend, tab2)
     
-if __name__ == "__main__":
-  from ost import testutils
-  testutils.RunTests()

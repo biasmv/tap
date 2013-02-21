@@ -1,4 +1,4 @@
-# tap - tables and python
+# tap - tables and python [![Build Status](https://secure.travis-ci.org/biasmv/tap.png)](http://travis-ci.org/biasmv/tap)
 
 tap grew out of the need of having an simple and unified interface to interact with tabular data. Our daily business required reading and writing hundreds of small files with tabular content. These files did not warrant to be put into a relational database. That's why we developed tap.
 

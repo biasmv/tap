@@ -3,9 +3,11 @@ python:
   - "2.5"
   - "2.6"
   - "2.7"
-  - "pypy"
+env:
+  - PACKAGES=''
+  - PACKAGES='numpy scipy'
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-# install: 
+install: pip install $PACKAGES --use-mirrors
 # command to run tests, e.g. python setup.py test
 script:  nosetests
 

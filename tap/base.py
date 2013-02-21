@@ -1132,9 +1132,13 @@ Statistics for column %(col)s
     raise ValueError('unknown format "%s"' % format)
 
   def _save_pickle(self, stream):
+    file_opened = False
     if not hasattr(stream, 'write'):
       stream=open(stream, 'wb')
+      file_opened = True
     cPickle.dump(self, stream, cPickle.HIGHEST_PROTOCOL)
+    if file_opened:
+      stream.close()
 
   def _save_html(self, stream_or_filename):
     def _escape(s):
@@ -1211,8 +1215,10 @@ Statistics for column %(col)s
       stream.close()
 
   def _save_csv(self, stream, sep):
+    file_opened = False
     if not hasattr(stream, 'write'):
       stream=open(stream, 'wb')
+      file_opened = True
 
     writer=csv.writer(stream, delimiter=sep)
     writer.writerow(['%s' % n for n in self.col_names])
@@ -1222,12 +1228,16 @@ Statistics for column %(col)s
         if c==None:
           row[i]='NA'
       writer.writerow(row)
+    if file_opened:
+      stream.close()
 
   def _save_ost(self, stream):
+    file_opened = False
     if hasattr(stream, 'write'):
       writer=csv.writer(stream, delimiter=' ')
     else:
       stream=open(stream, 'w')
+      file_opened = True
       writer=csv.writer(stream, delimiter=' ')
     if self.comment:
       stream.write(''.join(['# %s\n' % l for l in self.comment.split('\n')]))
@@ -1238,6 +1248,8 @@ Statistics for column %(col)s
         if c==None:
           row[i]='NA'
       writer.writerow(row)
+    if file_opened:
+      stream.close()
   
      
   def get_numpy_matrix(self, *args):

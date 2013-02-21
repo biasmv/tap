@@ -1101,6 +1101,8 @@ class TestTabBase(helper.TabTestCase):
     self.assertRaises(RuntimeError, tab.optimal_prefactors, 'c',weights='d')
 
   def test_can_smooth_columns_with_gaussians(self):
+    if not HAS_SCIPY:
+      return 
     tab = Tab(['a','b','c','d','e','f'],'fffffi',
                 a=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],
                 b=[0.5,1.0,2.0,3.0,2.5,1.0,0.5,2.3,1.0],

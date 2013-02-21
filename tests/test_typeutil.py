@@ -1,4 +1,5 @@
 import unittest
+import sys
 
 from tap import typeutil
 
@@ -47,7 +48,8 @@ class TestTypeutil(unittest.TestCase):
   def test_is_string_like(self):
     self.assertTrue(typeutil.is_string_like(u'unicode'))
     self.assertTrue(typeutil.is_string_like('ascii'))
-    self.assertTrue(typeutil.is_string_like(b'byte-string'))
+    if sys.version_info[0]>=3 or (sys.version_info[0]==2 and sys.version_info[1]>=6):
+      self.assertTrue(typeutil.is_string_like(bytes('byte-string')))
 
     self.assertFalse(typeutil.is_string_like(3))
     self.assertFalse(typeutil.is_string_like(['a','b']))

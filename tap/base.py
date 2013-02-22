@@ -87,8 +87,9 @@ class Tab(object):
     tab=Tab(['nameX','nameY','nameZ'], 'sfb')
     
   this will create three columns called nameX, nameY and nameZ of type string,
-  float and bool, respectively. There will be no data in the table and thus,
-  the table will not contain any rows.
+  float and bool, respectively. When the second argument is omitted, the 
+  columns will all have a string type. There will be no data in the table and 
+  thus, the table will not contain any rows.
   
   The following *column types* are supported:
   
@@ -113,7 +114,7 @@ class Tab(object):
               
   if values for one column is left out, they will be filled with NA, but if
   values are specified, all values must be specified (i.e. same number of
-  values per column)
+  values per column). 
     
   """
 

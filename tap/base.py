@@ -6,6 +6,7 @@ import operator
 import cPickle
 from stutil import median, mean, std_dev, correl
 import typeutil
+import format
 
 
 class BinaryColExpr:
@@ -231,8 +232,7 @@ class Tab(object):
     for r, v in zip(self.rows, value):
       r[col_index]=v
 
-  def to_string(self, float_format='%.3f', 
-                int_format='%d', rows=None):
+  def to_string(self, float_format='%.3f', int_format='%d', rows=None):
     '''
     Convert the table into a string representation.
 
@@ -253,41 +253,10 @@ class Tab(object):
     :param rows: iterable containing start and end row *index*
     :type rows: iterable containing :class:`ints <int>`
     '''
-    widths=[len(cn) for cn in self.col_names]
-    sel_rows=self.rows
-    if rows:
-      sel_rows=self.rows[rows[0]:rows[1]]
-    for row in sel_rows:
-      for i, (ty, col) in enumerate(zip(self.col_types, row)):
-        if col==None:
-          widths[i]=max(widths[i], len('NA'))
-        elif ty=='float':
-          widths[i]=max(widths[i], len(float_format % col))
-        elif ty=='int':
-          widths[i]=max(widths[i], len(int_format % col))
-        else:
-          widths[i]=max(widths[i], len(str(col)))
-    s=''
-    if self.comment:
-      s+=''.join(['# %s\n' % l for l in self.comment.split('\n')])
-    total_width=sum(widths)+2*len(widths)
-    for width, col_name in zip(widths, self.col_names):
-      s+=col_name.center(width+2)
-    s+='\n%s\n' % ('-'*total_width)
-    for row in sel_rows:
-      for width, ty, col in zip(widths, self.col_types, row):
-        cs=''
-        if col==None:
-          cs='NA'.center(width+2)
-        elif ty=='float':
-          cs=(float_format % col).rjust(width+2)
-        elif ty=='int':
-          cs=(int_format % col).rjust(width+2)
-        else:
-          cs=' '+str(col).ljust(width+1)
-        s+=cs
-      s+='\n'
-    return s
+    formatter = format.TableFormatter(float_format=float_format,
+                                      int_format=int_format,
+                                      rows=rows)
+    return formatter.format(self)
 
   def __str__(self):
     return self.to_string()

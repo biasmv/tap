@@ -749,8 +749,7 @@ Statistics for column %(col)s
   
   def max(self, col):
     """
-    Returns the maximum value in col. If several rows have the highest value,
-    only the first one is returned. None values are ignored.
+    Returns the maximum value in col. None values are ignored.
 
     :param col: column name
     :type col: :class:`str`
@@ -788,8 +787,7 @@ Statistics for column %(col)s
 
   def min(self, col):
     """
-    Returns the minimal value in col. If several rows have the lowest value,
-    only the first one is returned. None values are ignored.
+    Returns the minimal value in col. None values are ignored.
 
     :param col: column name
     :type col: :class:`str`
@@ -942,8 +940,7 @@ Statistics for column %(col)s
       values[min(len(values), int(round(len(values)*p/100+0.5)-1))]
 
     where values are the sorted values of *col* not equal to none
-    :param: nths: list of percentiles to be calculated. Each percentil is a number
-        between 0 and 100.
+    :param: nths: list of percentiles to be calculated. Each percentil is a number between 0 and 100.
 
     :raises: :class:`TypeError` if column type is ``string``
     :returns: List of percentils in the same order as given in *nths*

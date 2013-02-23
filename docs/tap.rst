@@ -138,7 +138,7 @@ initialise an empty table with a string, float, int and bool column each.
   # list abbreviated
   tab = Tab(['x', 'y', 'z', 'u'], ['s', 'f', 'i', 'b'])
 
-  # list abbreviated
+  # list extended
   tab = Tab(['x', 'y', 'z', 'u'], ['string', 'float', 'int', 'bool'])
 
 

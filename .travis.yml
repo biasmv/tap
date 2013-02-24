@@ -3,6 +3,7 @@ python:
   - "2.5"
   - "2.6"
   - "2.7"
+# test with and without numpy installed
 env:
   - PACKAGES=''
   - PACKAGES='numpy'

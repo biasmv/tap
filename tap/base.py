@@ -1066,8 +1066,9 @@ Statistics for column %(col)s
 
   def save(self, stream_or_filename, format='ost', sep=','):
     """
-    save the table to stream or filename. The following three file formats
-    are supported (for more information on file formats, see :meth:`load`):
+    save the table to stream or file pointed to by filename. The following 
+    three file formats are supported (for more information on file formats, 
+    see :meth:`load`):
 
     =============   =======================================
     ost             ost-specific format (human readable)

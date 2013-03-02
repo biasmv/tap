@@ -14,8 +14,8 @@ Statistics and Data Analysis
 .. automethod:: tap.Tab.count
 .. automethod:: tap.Tab.correl
 .. automethod:: tap.Tab.spearman_correl
-.. automethod:: tap.Tab.compute_mcc
 .. automethod:: tap.Tab.compute_roc
 .. automethod:: tap.Tab.compute_enrichment
-.. automethod:: tap.Tab.get_optimal_prefactors
+.. automethod:: tap.Tab.compute_mcc
+.. automethod:: tap.Tab.optimal_prefactors
 

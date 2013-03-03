@@ -72,51 +72,6 @@ class TabCol:
 
 class Tab(object):
   """
-  
-  The table class provides convenient access to data in tabular form. An empty 
-  table can be easily constructed as follows
-  
-  .. code-block:: python
-  
-    tab=Tab()
-    
-  If you want to add columns directly when creating the table, column names
-  and *column types* can be specified as follows
-  
-  .. code-block:: python
-  
-    tab=Tab(['nameX','nameY','nameZ'], 'sfb')
-    
-  this will create three columns called nameX, nameY and nameZ of type string,
-  float and bool, respectively. When the second argument is omitted, the 
-  columns will all have a string type. There will be no data in the table and 
-  thus, the table will not contain any rows.
-  
-  The following *column types* are supported:
-  
-  ======= ========
-  name     abbrev
-  ======= ========
-  string     s
-  float      f
-  int        i
-  bool       b
-  ======= ========
-  
-  If you want to add data to the table in addition, use the following:
-  
-  .. code-block:: python
-  
-    tab=Tab(['nameX','nameY','nameZ'],
-              'sfb',
-              nameX=['a','b','c'],
-              nameY=[0.1, 1.2, 3.414],
-              nameZ=[True, False, False])
-              
-  if values for one column is left out, they will be filled with NA, but if
-  values are specified, all values must be specified (i.e. same number of
-  values per column). 
-    
   """
 
   SUPPORTED_TYPES=('int', 'float', 'bool', 'string',)

@@ -18,4 +18,9 @@ Statistics and Data Analysis
 .. automethod:: tap.Tab.compute_enrichment
 .. automethod:: tap.Tab.compute_mcc
 .. automethod:: tap.Tab.optimal_prefactors
+.. automethod:: tap.Tab.stats
+.. automethod:: tap.Tab.row_mean
+.. automethod:: tap.Tab.sum
+.. automethod:: tap.Tab.paired_t_test
+
 

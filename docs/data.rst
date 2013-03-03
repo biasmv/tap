@@ -1,13 +1,8 @@
 Handling of Tabular Data
 ================================================================================
 
-.. module:: tap
-  :synopsis: painless tabular data management for python
-  
-This module defines the table class that provides convenient functionality to
-work with tabular data. It features functions to calculate statistical moments,
-e.g. mean, standard deviations as well as functionality to plot the data using
-matplotlib.
+This document explains the basics of working with tabular data, and shows how
+to add, remove data from a table.
 
 Basic Usage
 --------------------------------------------------------------------------------
@@ -45,10 +40,49 @@ Iterating over table items:
     print foo, bar
 
 
+Creating Table Objects
+--------------------------------------------------------------------------------
+
+Tables can either be initialized with information from memory, or populated with 
+data from :func:`load <external sources>`, e.g. CSV files or a pickled dump of a 
+previously constructed table. An empty table can be easily constructed as 
+follows
+
+.. code-block:: python
+
+  tab=Tab()
+  
+If you want to add columns directly when creating the table, column names
+and *column types* can be specified as follows
+
+.. code-block:: python
+
+  tab=Tab(['nameX','nameY','nameZ'], 'sfb')
+  
+this will create three columns called nameX, nameY and nameZ of type string,
+float and bool, respectively. When the second argument is omitted, the 
+columns will all have a string type. There will be no data in the table and 
+thus, the table will not contain any rows. 
 
 
-The Tab class
-This document gives an overview of data handling with the :mod:`tap` module.
+If you want to add data to the table in addition, use the following:
+
+.. code-block:: python
+
+  tab=Tab(['nameX','nameY','nameZ'],
+            'sfb',
+            nameX=['a','b','c'],
+            nameY=[0.1, 1.2, 3.414],
+            nameZ=[True, False, False])
+            
+If values for one column are omitted, they will be filled with NA, but if
+values are specified, all values must be specified (i.e. same number of
+values per column). 
+  
+.. code-block:: python
+
+  tab = Tab(['name, age'], 'string,float')
+
 
 
 Column Types
@@ -132,6 +166,16 @@ Combining Tables
 .. automethod:: tap.Tab.extend
 .. autofunction:: tap.merge
 
+
+
+Sorting/Querying data
+--------------------------------------------------------------------------------
+
+
+.. automethod:: tap.Tab.sort
+.. automethod:: tap.Tab.empty
+.. automethod:: tap.Tab.get_unique
+.. automethod:: tap.Tab.has_col
 
 Accessing data
 --------------------------------------------------------------------------------

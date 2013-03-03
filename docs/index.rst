@@ -6,6 +6,14 @@
 :mod:`tap` - Painless Tabular Datamangement for Python
 ===================================================================================
 
+.. module:: tap
+  :synopsis: painless tabular data management for python
+  
+This module defines the table class that provides convenient functionality to
+work with tabular data. It features functions to calculate statistical moments,
+e.g. mean, standard deviations as well as functionality to plot the data using
+matplotlib.
+
 Contents:
 
 .. toctree::
@@ -31,7 +39,11 @@ The tap API at a glance
 :meth:`~tap.Tab.sort`                   sort table by column
 :meth:`~tap.Tab.filter`                 filter table by values
 :meth:`~tap.Tab.zip`                    extract multiple columns at once
-:meth:`~tap.Tab.seach_col_names`        search for matching column names
+:meth:`~tap.Tab.zip_non_null`           extract multiple columns at once, ignoring none
+:meth:`~tap.Tab.search_col_names`       search for matching column names
+:meth:`~tap.Tab.empty`                  check whether table/column is empty
+:meth:`~tap.Tab.get_unique`             get unique values of a column
+:meth:`~tap.Tab.has_col`                check for existence of column
 
 **Input/Output**
 :meth:`~tap.Tab.save`                   save a table to a file
@@ -54,7 +66,9 @@ The tap API at a glance
 :meth:`~tap.Tab.compute_mcc`            compute Matthew's correlation coefficient
 :meth:`~tap.Tab.compute_roc`            compute receiver operating characteristics (ROC)
 :meth:`~tap.Tab.compute_enrichment`     compute enrichment
-:meth:`~tap.Tab.get_optimal_prefactors` compute optimal coefficients for linear combination of columns
+:meth:`~tap.Tab.optimal_prefactors`     compute optimal coefficients for linear combination of columns
+:meth:`~tap.Tab.stats`                  get various statistics on a column
+:meth:`~tap.Tab.paired_t_test`          perform paired t-test on two columns
 
 **Plot**
 :meth:`~tap.Tab.plot`                   Plot data in 1, 2 or 3 dimensions

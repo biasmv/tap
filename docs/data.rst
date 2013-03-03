@@ -172,6 +172,7 @@ Sorting/Querying data
 --------------------------------------------------------------------------------
 
 
+.. automethod:: tap.Tab.to_string
 .. automethod:: tap.Tab.sort
 .. automethod:: tap.Tab.empty
 .. automethod:: tap.Tab.get_unique

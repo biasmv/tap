@@ -90,7 +90,8 @@ def guess_format(filename):
   
 def load(stream_or_filename, format='auto', sep=','):
   """
-  load table from stream or file with given name.
+  Load table from an input stream or the file pointed to by filename.
+
 
   By default, the file format is set to *auto*, which tries to guess the file
   format from the file extension. The following file extensions are
@@ -104,8 +105,8 @@ def load(stream_or_filename, format='auto', sep=','):
   <all others>    ost-specific format
   ============    ======================
   
-  Thus, *format* must be specified for reading file with different filename
-  extensions.
+  For csv and pickle files with other file extensions, the format must be 
+  specified explicitly by setting *format* the appropriate format string.
 
   The following file formats are understood:
 

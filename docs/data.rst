@@ -1,13 +1,8 @@
-:mod:`~tap` - Working with tabular data
+Handling of Tabular Data
 ================================================================================
 
-.. module:: tap
-  :synopsis: Working with tabular data
-  
-This module defines the table class that provides convenient functionality to
-work with tabular data. It features functions to calculate statistical moments,
-e.g. mean, standard deviations as well as functionality to plot the data using
-matplotlib.
+This document explains the basics of working with tabular data, and shows how
+to add, remove data from a table.
 
 Basic Usage
 --------------------------------------------------------------------------------
@@ -45,55 +40,50 @@ Iterating over table items:
     print foo, bar
 
 
-Functions You Might be Interested In
+Creating Table Objects
 --------------------------------------------------------------------------------
 
-======================================= ============================================
-**Adding/Removing/Reordering data**
-:meth:`~tap.Tab.add_row`                add a row to the table
-:meth:`~tap.Tab.add_col`                add a column to the table
-:meth:`~tap.Tab.remove_col`             remove a column from the table
-:meth:`~tap.Tab.rename_col`             rename a column
-:meth:`~tap.Tab.extend`                 append a table to the end of another table
-:meth:`~tap.merge`                      merge two tables together
-:meth:`~tap.Tab.sort`                   sort table by column
-:meth:`~tap.Tab.filter`                 filter table by values
-:meth:`~tap.Tab.zip`                    extract multiple columns at once
-:meth:`~tap.Tab.seach_col_names`        search for matching column names
+Tables can either be initialized with information from memory, or populated with 
+data from :func:`load <external sources>`, e.g. CSV files or a pickled dump of a 
+previously constructed table. An empty table can be easily constructed as 
+follows
 
-**Input/Output**
-:meth:`~tap.Tab.save`                   save a table to a file
-:meth:`~tap.Tab.load`                   load a table from a file
-:meth:`~tap.Tab.to_string`              convert a table to a string for printing
+.. code-block:: python
 
-**Simple Math**
-:meth:`~tap.Tab.min`                    compute the minimum of a column
-:meth:`~tap.Tab.max`                    compute the maximum of a column
-:meth:`~tap.Tab.sum`                    compute the sum of a column
-:meth:`~tap.Tab.mean`                   compute the mean of a column
-:meth:`~tap.Tab.row_mean`               compute the mean for each row
-:meth:`~tap.Tab.median`                 compute the median of a column
-:meth:`~tap.Tab.std_dev`                compute the standard deviation of a column
-:meth:`~tap.Tab.count`                  compute the number of items in a column
+  tab=Tab()
+  
+If you want to add columns directly when creating the table, column names
+and *column types* can be specified as follows
 
-**More Sophisticated Math**
-:meth:`~tap.Tab.correl`                 compute Pearson's correlation coefficient
-:meth:`~tap.Tab.spearman_correl`        compute Spearman's rank correlation coefficient
-:meth:`~tap.Tab.compute_mcc`            compute Matthew's correlation coefficient
-:meth:`~tap.Tab.compute_roc`            compute receiver operating characteristics (ROC)
-:meth:`~tap.Tab.compute_enrichment`     compute enrichment
-:meth:`~tap.Tab.get_optimal_prefactors` compute optimal coefficients for linear combination of columns
+.. code-block:: python
 
-**Plot**
-:meth:`~tap.Tab.plot`                   Plot data in 1, 2 or 3 dimensions
-:meth:`~tap.Tab.plot_histogram`         Plot data as histogram
-:meth:`~tap.Tab.plot_roc`               Plot receiver operating characteristics (ROC)
-:meth:`~tap.Tab.plot_enrichment`        Plot enrichment
-:meth:`~tap.Tab.plot_hexbin`            Hexagonal density plot
-:meth:`~tap.Tab.plot_bar`               Bar plot
+  tab=Tab(['nameX','nameY','nameZ'], 'sfb')
+  
+this will create three columns called nameX, nameY and nameZ of type string,
+float and bool, respectively. When the second argument is omitted, the 
+columns will all have a string type. There will be no data in the table and 
+thus, the table will not contain any rows. 
 
 
-======================================= ============================================
+If you want to add data to the table in addition, use the following:
+
+.. code-block:: python
+
+  tab=Tab(['nameX','nameY','nameZ'],
+            'sfb',
+            nameX=['a','b','c'],
+            nameY=[0.1, 1.2, 3.414],
+            nameZ=[True, False, False])
+            
+If values for one column are omitted, they will be filled with NA, but if
+values are specified, all values must be specified (i.e. same number of
+values per column). 
+  
+.. code-block:: python
+
+  tab = Tab(['name, age'], 'string,float')
+
+
 
 Column Types
 --------------------------------------------------------------------------------
@@ -157,12 +147,43 @@ arrays are empty, the array types are set to string.
   t = Tab(['x','y'], x='True False False'.split(), y='1 NA 3'.split())
   print t.col_types # bool int
 
-The Tab class
+
+Adding and Removing Data from a Table
+--------------------------------------------------------------------------------
+
+The following methods allow to add and remove data in a row and column-wise
+manner.
+
+.. automethod:: tap.Tab.add_row
+.. automethod:: tap.Tab.add_col
+.. automethod:: tap.Tab.remove_col
+.. automethod:: tap.Tab.rename_col
+
+
+Combining Tables
+--------------------------------------------------------------------------------
+
+.. automethod:: tap.Tab.extend
+.. autofunction:: tap.merge
+
+
+
+Sorting/Querying data
 --------------------------------------------------------------------------------
 
 
-.. autoclass:: tap.Tab
-  :members:
-  :undoc-members: SUPPORTED_TYPES
+.. automethod:: tap.Tab.to_string
+.. automethod:: tap.Tab.sort
+.. automethod:: tap.Tab.empty
+.. automethod:: tap.Tab.get_unique
+.. automethod:: tap.Tab.has_col
 
-.. autofunction:: tap.merge
+Accessing data
+--------------------------------------------------------------------------------
+
+The data in a table can be iterated row and column-wise. 
+
+.. automethod:: tap.Tab.zip
+.. automethod:: tap.Tab.zip_non_null
+.. automethod:: tap.Tab.filter
+.. automethod:: tap.Tab.search_col_names

@@ -1506,23 +1506,22 @@ Statistics for column %(col)s
       score_val = row[score_idx]
       if class_val==None or score_val==None:
         continue
-      if class_val!=None:
-        if old_score_val==None:
-          old_score_val = score_val
-        if score_val!=old_score_val:
-          x.append(fp)
-          y.append(tp)
-          old_score_val = score_val
-        if class_type=='bool':
-          if class_val==True:
-            tp += 1
-          else:
-            fp += 1
+      if old_score_val==None:
+        old_score_val = score_val
+      if score_val!=old_score_val:
+        x.append(fp)
+        y.append(tp)
+        old_score_val = score_val
+      if class_type=='bool':
+        if class_val==True:
+          tp += 1
         else:
-          if (class_dir=='-' and class_val<=class_cutoff) or (class_dir=='+' and class_val>=class_cutoff):
-            tp += 1
-          else:
-            fp += 1
+          fp += 1
+      else:
+        if (class_dir=='-' and class_val<=class_cutoff) or (class_dir=='+' and class_val>=class_cutoff):
+          tp += 1
+        else:
+          fp += 1
     x.append(fp)
     y.append(tp)
     
